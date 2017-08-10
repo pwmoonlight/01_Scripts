@@ -293,6 +293,9 @@ bg_bioclim <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil_Masked_
 bg_bioclim <- bg_bioclim[PCA]
 bg_bioclim <- stack(bg_bioclim)
 
+# Prepare the future climate data
+source(paste(getwd(), "/01_Scripts/Minor_Modules/4___Prepare_Future_Climate_Data.R", sep=""))
+
 species <- sub(".csv", "", list.files("09_Species_To_Model_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 
 for(x in 1:length(species)){
