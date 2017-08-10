@@ -18,7 +18,7 @@ for(x in 1:length(Future_Climate_Scenarios)){
   writeLines(paste("Reading Data for", Future_Climate_Scenarios[[x]], "..."))
   if(file.exists(paste("Y:/South America GIS/Brasil/Future Climate Scenarios/", Future_Climate_Scenarios[[x]], "/45bi50", sep=""))){
     writeLines(paste("...45 Scenario"))
-    files <- list.files(paste("Y:/South America GIS/Brasil/Future Climate Scenarios/", Future_Climate_Scenarios[[x]], "/45bi50", sep=""), pattern="*.tif", full.names=T)
+    files <- list.files(paste("Y:/South America GIS/Brasil/Future Climate Scenarios/", Future_Climate_Scenarios[[x]], "/45bi50", sep=""), pattern="*3_degrees.tif", full.names=T)
     files <- files[PCA]
     files <- lapply(files, raster)
     for(z in 1:length(files)){
@@ -28,7 +28,7 @@ for(x in 1:length(Future_Climate_Scenarios)){
   }
   if(file.exists(paste("Y:/South America GIS/Brasil/Future Climate Scenarios/", Future_Climate_Scenarios[[x]], "/85bi50", sep=""))){
     writeLines(paste("...85 Scenario"))
-    files <- list.files(paste("Y:/South America GIS/Brasil/Future Climate Scenarios/", Future_Climate_Scenarios[[x]], "/85bi50", sep=""), pattern="*.tif", full.names=T)
+    files <- list.files(paste("Y:/South America GIS/Brasil/Future Climate Scenarios/", Future_Climate_Scenarios[[x]], "/85bi50", sep=""), pattern="*3_degrees.tif", full.names=T)
     files <- files[PCA]
     files <- lapply(files, raster)
     for(z in 1:length(files)){
