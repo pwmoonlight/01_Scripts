@@ -306,7 +306,13 @@ for(x in 1:length(species)){
   ### Project Those Models onto Future Scenarios ###
   ### ------------------------------------------ ### 
   
+  # This is a list of models chosen following via K-clustering. This is currently done in a separate script.
+  chosen_models_45 <- c(1, 6, 8, 9, 12, 13)
+  chosen_models_85 <- c(6, 8, 11, 12, 13)
+  
   source(paste(getwd(), "/01_Scripts/06____Predict_Model_Into_Future_Scenarios.R", sep=""))
+  
+  rm(chosen_models_45, chosen_models_85)
 }
 rm(background_data, species_data, bg_bioclim, kde_raster, model, PCA, x)
 

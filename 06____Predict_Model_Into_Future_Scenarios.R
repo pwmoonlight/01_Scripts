@@ -7,13 +7,10 @@
 ###############################################################################################################
 
 
-dir.create("12_Future_Projections", showWarnings=F)
+dir.create("14_Future_Projections", showWarnings=F)
 lapply(Future_Climate_Scenarios, function(x){dir.create(paste("12_Future_Projections/", x, sep=""), showWarnings = F)})
 
 writeLines(paste("...Predicting Model Using Future Climate Variables"))
-
-chosen_models_45 <- c(1, 6, 8, 9, 12, 13)
-chosen_models_85 <- c(6, 8, 11, 12, 13)
 
 
 for(z in 1:length(Future_Climate_Data)){
