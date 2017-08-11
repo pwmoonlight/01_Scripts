@@ -288,7 +288,7 @@ source(paste(getwd(), "/01_Scripts/08___Thresholds_Models.R", sep=""))
 source(paste(getwd(), "/01_Scripts/04____PCA_bioclim.R", sep=""))
 
 # This line will need manual editing depending upon which variables are selected
-PCA <- c(6, 10, 12, 13, 14, 15, 16, 18, 22, 27, 28, 30, 33)
+PCA_bioclim <- c(4,9,10,11,13,17,18)
 
 
 
@@ -302,9 +302,9 @@ PCA <- c(6, 10, 12, 13, 14, 15, 16, 18, 22, 27, 28, 30, 33)
 dir.create("13_Models_Bioclim", showWarnings = F)
 require(dismo)
 
-bg_bioclim <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil_Masked_GIS_Layers", pattern="*.tif$", full.names = T), raster)
+bg_bioclim <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil Masked BIOCLIM", pattern="*3_degrees.tif$", full.names = T), raster)
 # Usually you will have done a PCA by this point. Keep only those BG layers selected during the PCA  
-bg_bioclim <- bg_bioclim[PCA]
+bg_bioclim <- bg_bioclim[PCA_bioclim]
 bg_bioclim <- stack(bg_bioclim)
 
 # Prepare the future climate data
