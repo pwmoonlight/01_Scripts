@@ -278,6 +278,20 @@ source(paste(getwd(), "/01_Scripts/08___Thresholds_Models.R", sep=""))
 
 
 
+################################################################################
+####------------------------------ MODULE 5a -------------------------------####
+################################################################################
+######### - Perform a PCA to select bioclim environmental variables - ##########
+################################################################################
+
+
+source(paste(getwd(), "/01_Scripts/04____PCA_bioclim.R", sep=""))
+
+# This line will need manual editing depending upon which variables are selected
+PCA <- c(6, 10, 12, 13, 14, 15, 16, 18, 22, 27, 28, 30, 33)
+
+
+
 ################################################
 ####--------------- MODULE 5 ---------------####
 ################################################
@@ -317,7 +331,7 @@ for(x in 1:length(species)){
   
   rm(chosen_models_45, chosen_models_85)
 }
-rm(background_data, species_data, bg_bioclim, kde_raster, model, PCA, x)
+rm(background_data, species_data, bg_bioclim, kde_raster, model, PCA, x, chosen_models_45, chosen_models_85)
 
 
 
