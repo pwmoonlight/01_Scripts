@@ -9,8 +9,8 @@
 writeLines(paste("\nLoading Background Data:\n"))
 
 Future_Climate_Scenarios <- list.dirs("Y:/South America GIS/Brasil/Future Climate Scenarios", full.names = F, recursive=F)
-dir.create("12_Future_Projections", showWarnings = F)
-lapply(Future_Climate_Scenarios, function(x){dir.create(paste("12_Future_Projections/", x, sep=""), showWarnings = F)})
+dir.create("13_Future_Projections", showWarnings = F)
+lapply(Future_Climate_Scenarios, function(x){dir.create(paste("13_Future_Projections/", x, sep=""), showWarnings = F)})
 
 Future_Climate_Data <- lapply(1:length(Future_Climate_Scenarios), function(x){lapply(1:2, function(x){})})
 
