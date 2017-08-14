@@ -363,7 +363,7 @@ nordeste <- readOGR("000_GIS_layers/nordeste.shp", layer="nordeste")
 ### Mask the CHIRPS/MODIS models ###
 ### ---------------------------- ###
 
-species <- sub(".tif", "", list.files("12_Thresholded_models", pattern="*.tif", full.names=F))
+species <- gsub(".{4}$", "", list.files("12_Thresholded_models", pattern="*.tif", full.names=F))
 dir.create("11a_Models_Masked_Nordeste", showWarnings = F)
 for(x in 1:length(species)){
   model <- mask(raster(paste("11_models/Bias_Spatial_Filtering/", species[[x]], ".tif", sep="")), nordeste)
@@ -373,7 +373,7 @@ for(x in 1:length(species)){
 ### Mask the CHIRPS/MODIS models - with thresholding ###
 ### ------------------------------------------------ ###
 
-species <- sub(".tif", "", list.files("12_Thresholded_models", pattern="*.tif", full.names=F))
+species <- gsub(".{4}$", "", list.files("12_Thresholded_models", pattern="*.tif", full.names=F))
 dir.create("12a_Thresholded_Models_Masked_Nordeste", showWarnings = F)
 for(x in 1:length(species)){
   model <- mask(raster(paste("12_Thresholded_Models/", species[[x]], ".tif", sep="")), nordeste)
