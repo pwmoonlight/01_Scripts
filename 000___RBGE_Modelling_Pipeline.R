@@ -48,7 +48,15 @@
 ##                                                                                                                 ##
 ##    (9) Evaluate the bioclim models                                                                              ##
 ##                                                                                                                 ##
-##    (10) Produce a Predicted Niche Occupance (PNO) profile for each species                                      ##
+##    (10) Mask to the Northeast of Brazil:                                                                        ##
+##        a) The CHIRPS/MODIS models                                                                               ##
+##        b) The CHIRPS/MODIS models - thresholded                                                                 ##
+##        c) The bioclim models                                                                                    ##
+##        d) The bioclim models - thresholded                                                                      ##
+##        e) The future projected models                                                                           ##
+##        f) The future projected models - thresholded                                                             ##
+##                                                                                                                 ##
+##    (11) Produce a Predicted Niche Occupance (PNO) profile for each species                                      ##
 ##                                                                                                                 ##
 #####################################################################################################################
 
@@ -63,7 +71,7 @@
 ### Prepare the working space
 ### -------------------------
 
-setwd("C:/000_Modeling_Working_Directory_000")
+setwd("G:/000_Modeling_Working_Directory_000")
 setwd("000_Modeling_Working_Directory_000")
 source(paste(getwd(), "/01_Scripts/Minor_Modules/1___Prepare_Working_Space.R", sep=""))
 
@@ -278,20 +286,45 @@ source(paste(getwd(), "/01_Scripts/08___Thresholds_Models.R", sep=""))
 
 
 
+################################################################################
+####------------------------------ MODULE 5a -------------------------------####
+################################################################################
+######### - Perform a PCA to select bioclim environmental variables - ##########
+################################################################################
+
+
+source(paste(getwd(), "/01_Scripts/04____PCA_bioclim.R", sep=""))
+
+# This line will need manual editing depending upon which variables are selected
+PCA_bioclim <- c(4,9,10,11,13,17,18)
+
+
+
 ################################################
-####--------------- MODULE 5 ---------------####
+####--------------- MODULE 7 ---------------####
 ################################################
 ######### - Runs the bioclim models - ##########
 ################################################
 
 
-dir.create("13_Models_Bioclim", showWarnings = F)
+dir.create("14_Models_Bioclim", showWarnings = F)
 require(dismo)
 
-bg_bioclim <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil_Masked_GIS_Layers", pattern="*.tif$", full.names = T), raster)
+
+### Read in the bioclim data ###
+### ------------------------ ###
+
+# The folder may need changing depending upon where you are running the model
+
+#bg_bioclim <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil Masked BIOCLIM", pattern="*3_degrees.tif$", full.names = T), raster)
+bg_bioclim <- lapply(list.files(path="000_GIS_LAYERS/Brazil Masked BIOCLIM", pattern="*3_degrees.tif$", full.names = T), raster)
+
 # Usually you will have done a PCA by this point. Keep only those BG layers selected during the PCA  
-bg_bioclim <- bg_bioclim[PCA]
+bg_bioclim <- bg_bioclim[PCA_bioclim]
 bg_bioclim <- stack(bg_bioclim)
+
+# Prepare the future climate data
+source(paste(getwd(), "/01_Scripts/Minor_Modules/4___Prepare_Future_Climate_Data.R", sep=""))
 
 species <- sub(".csv", "", list.files("09_Species_To_Model_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 
@@ -306,17 +339,59 @@ for(x in 1:length(species)){
   ### Project Those Models onto Future Scenarios ###
   ### ------------------------------------------ ### 
   
+  # This is a list of models chosen following via K-clustering. This is currently done in a separate script.
+  chosen_models_45 <- c(1, 6, 8, 9, 12, 13)
+  chosen_models_85 <- c(6, 8, 11, 12, 13)
+  
   source(paste(getwd(), "/01_Scripts/06____Predict_Model_Into_Future_Scenarios.R", sep=""))
+  
+  rm(chosen_models_45, chosen_models_85)
 }
-rm(background_data, species_data, bg_bioclim, kde_raster, model, PCA, x)
+rm(background_data, species_data, bg_bioclim, kde_raster, model, PCA, x, chosen_models_45, chosen_models_85)
+
+
+##############################################
+####-------------- MODULE 10 -------------####
+##############################################
+####### - Mask Models to the Nordeste - ######
+##############################################
 
 
 
+nordeste <- readOGR("000_GIS_layers/nordeste.shp", layer="nordeste")
+
+### Mask the CHIRPS/MODIS models ###
+### ---------------------------- ###
+
+species <- sub(".tif", "", list.files("12_Thresholded_models", pattern="*.tif", full.names=F))
+dir.create("11a_Models_Masked_Nordeste", showWarnings = F)
+for(x in 1:length(species)){
+  model <- mask(raster(paste("11_models/Bias_Spatial_Filtering/", species[[x]], ".tif", sep="")), nordeste)
+  writeRaster(model, file=paste("11a_Models_Masked_Nordeste/", species[[x]], ".tif", sep=""))
+}
+
+### Mask the CHIRPS/MODIS models - with thresholding ###
+### ------------------------------------------------ ###
+
+species <- sub(".tif", "", list.files("12_Thresholded_models", pattern="*.tif", full.names=F))
+dir.create("12a_Thresholded_Models_Masked_Nordeste", showWarnings = F)
+for(x in 1:length(species)){
+  model <- mask(raster(paste("12_Thresholded_Models/", species[[x]], ".tif", sep="")), nordeste)
+  writeRaster(model, file=paste("12a_Thresholded_Models_Masked_Nordeste/", species[[x]], ".tif", sep=""))
+}
 
 
+### Mask the bioclim models ###
+### ----------------------- ###
 
+### Mask the bioclim models - with thresholding ###
+### ------------------------------------------- ###
 
+### Mask the future bioclim models ###
+### ------------------------------ ###
 
+### Mask the future bioclim models - with thresholding ###
+### -------------------------------------------------- ###
 
 
 
@@ -328,13 +403,3 @@ rm(background_data, species_data, bg_bioclim, kde_raster, model, PCA, x)
 ########################################
 ####### - Produces PNO profiles - ######
 ########################################
-
-
-
-
-
-# Read in Future Climate Scenarios
-#source(paste(getwd(), "/01_Scripts/Minor_Modules/4___Prepare_Future_Climate_Data.R", sep=""))
-#source(paste(getwd(), "/01_Scripts/Minor_Modules/4___Prepare_Future_Climate_Data_Server.R", sep=""))
-
-
