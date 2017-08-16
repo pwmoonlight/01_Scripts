@@ -10,10 +10,10 @@ for(x in 1:length(species)){
   
   writeLines(paste("   ...Working With ", species[[x]], sep=""))
   
-  model <- lapply(list.files(path="11_models/Bias_Spatial_Filtering/", full.names = T, pattern=paste(species[[x]], "_", sep="")), raster)
+  model <- lapply(list.files(path="03_Modelling/11_models/Bias_Spatial_Filtering/", full.names = T, pattern=paste(species[[x]], "_", sep="")), raster)
   model <- stack(model)
   
-  writeRaster(model, file=paste("11_models/Bias_Spatial_Filtering/", species[[x]], ".tif", sep=""))
+  writeRaster(model, file=paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], ".tif", sep=""))
 }
 
 
