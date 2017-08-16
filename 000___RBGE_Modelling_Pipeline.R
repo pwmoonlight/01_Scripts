@@ -129,7 +129,7 @@ require(raster)
 
 # Specify how many distribution points are necessary
 cutoff <- 10
-kde_raster <- raster("Y:/South America GIS/Brasil/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
+kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
 
 species <- sub(".csv", "", list.files("04_Species_To_Model_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 dir.create("08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", showWarnings = F)
@@ -178,7 +178,7 @@ source(paste(getwd(), "/01_Scripts/03____Spatial_Filtering.R", sep=""))
 
 # Find the species
 species <- sub(".csv", "", list.files("08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
-kde_raster <- raster("Y:/South America GIS/Brasil/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
+kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
 
 
 ### Produce a biased and a non-biased background sample for each species ###

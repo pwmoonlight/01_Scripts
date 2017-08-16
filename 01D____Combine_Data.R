@@ -12,9 +12,9 @@
 ### Find a list of species to be modelled ###
 ### ------------------------------------- ###
 
-CRIA <- list.dirs("04_Species_To_Model_Distribution_Data/CRIA", full.names=F, recursive=F)
-PADME <- list.dirs("04_Species_To_Model_Distribution_Data/PADME", full.names=F, recursive=F)
-REFLORA <- list.dirs("04_Species_To_Model_Distribution_Data/REFLORA", full.names=F, recursive=F)
+CRIA <- list.dirs("03_Modelling/04_Species_To_Model_Distribution_Data/CRIA", full.names=F, recursive=F)
+PADME <- list.dirs("03_Modelling/04_Species_To_Model_Distribution_Data/PADME", full.names=F, recursive=F)
+REFLORA <- list.dirs("03_Modelling/04_Species_To_Model_Distribution_Data/REFLORA", full.names=F, recursive=F)
 
 species <- c(CRIA, PADME, REFLORA)
 species <- as.vector(unique(species))
@@ -36,17 +36,17 @@ for(x in species){
   cpr <- c()
   
   if(length(c)>0){
-    c <- read.csv(paste("04_Species_To_Model_Distribution_Data/CRIA/", x, "/data.csv", sep=""))[,-1]
+    c <- read.csv(paste("03_Modelling/04_Species_To_Model_Distribution_Data/CRIA/", x, "/data.csv", sep=""))[,-1]
     c <- c[,c(1,2,7)]
     colnames(c) <- c("lat", "long", "species")
     cpr[[1]] <- c}
   if(length(p)>0){
-    p <- read.csv(paste("04_Species_To_Model_Distribution_Data/PADME/", x, "/data.csv", sep=""))[,-1]
+    p <- read.csv(paste("03_Modelling/04_Species_To_Model_Distribution_Data/PADME/", x, "/data.csv", sep=""))[,-1]
     p <- p[,c(1,2,6)]
     colnames(p) <- c("lat", "long", "species")
     cpr[[2]] <- p}
   if(length(r)>0){
-    r <- read.csv(paste("04_Species_To_Model_Distribution_Data/REFLORA/", x, "/data.csv", sep=""))[,-1]
+    r <- read.csv(paste("03_Modelling/04_Species_To_Model_Distribution_Data/REFLORA/", x, "/data.csv", sep=""))[,-1]
     r <- r[,c(1,2,8)]
     colnames(r) <- c("lat", "long", "species")
     cpr[[3]] <- r}
@@ -54,7 +54,7 @@ for(x in species){
   classes <- c(class(c), class(p), class(r))
   classes <- which(classes == "data.frame")
   
-  write.csv(do.call(rbind, cpr[classes]), file=paste("04_Species_To_Model_Distribution_Data/", x, ".csv", sep=""))
+  write.csv(do.call(rbind, cpr[classes]), file=paste("03_Modelling/04_Species_To_Model_Distribution_Data/", x, ".csv", sep=""))
   
   writeLines(x)
 }
