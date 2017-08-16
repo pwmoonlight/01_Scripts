@@ -225,21 +225,21 @@ require(raster)
 ### Run 4 models ###
 ### ------------ ###
 
-dir.create("11_Models", showWarnings = F)
+dir.create("03_Modelling/11_Models", showWarnings = F)
 require(dismo)
 
-bg <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil_Masked_GIS_Layers", pattern="*.tif$", full.names = T), raster)
+bg <- lapply(list.files(path="000_GIS_LAYERS/Brazil_Masked_GIS_Layers", pattern="*.tif$", full.names = T), raster)
 # Usually you will have done a PCA by this point. Keep only those BG layers selected during the PCA  
 bg <- bg[PCA]
 bg <- stack(bg)
 
-species <- sub(".csv", "", list.files("09_Species_To_Model_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
+species <- sub(".csv", "", list.files("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 
 for(x in 1:length(species)){
   writeLines(paste("\nWorking on ", species[[x]], " ..."))
   
-  species_data <- read.csv(paste("09_Species_To_Model_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))[,-1]
-  background_data <- read.csv(paste("10_Background_Data/Biased/", species[[x]], ".csv", sep=""))[,-1]
+  species_data <- read.csv(paste("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))[,-1]
+  background_data <- read.csv(paste("03_Modelling/10_Background_Data/Biased/", species[[x]], ".csv", sep=""))[,-1]
   
   source(paste(getwd(), "/01_Scripts/05d____Run_Model_Bias_Spatial_Filtering.R", sep=""))
   
