@@ -171,13 +171,13 @@ for(x in 1:length(species)){
 # Set the distance over which to preform Spatial Filtering in km
 scale_distance <- 10
 
-species <- sub(".csv", "", list.files("08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
+species <- sub(".csv", "", list.files("03_Modelling/08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 source(paste(getwd(), "/01_Scripts/03____Spatial_Filtering.R", sep=""))
 
 
 
 # Find the species
-species <- sub(".csv", "", list.files("08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
+species <- sub(".csv", "", list.files("03_Modelling/08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
 
 
