@@ -259,7 +259,7 @@ rm(background_data, species_data, bg, kde_raster, model, PCA, x)
 ### Finds the model CBI ###
 ### ------------------- ### 
 
-species <- sub(".csv", "", list.files("09_Species_To_Model_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
+species <- sub(".csv", "", list.files("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 
 source(paste(getwd(), "/01_Scripts/07___Find_Model_CBIs.R", sep=""))
 
