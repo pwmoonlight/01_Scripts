@@ -7,7 +7,7 @@
 ###############################################################################################################
 
 
-species_data <- read.csv(paste("04_Species_To_Model_Distribution_Data/", species[[x]], ".csv", sep=""))[,-1]
+species_data <- read.csv(paste("03_Modelling/04_Species_To_Model_Distribution_Data/", species[[x]], ".csv", sep=""))[,-1]
 
 writeLines("   ...Finding Cells At Points")
 species_data[,4] <- cellFromXY(kde_raster, species_data[,2:1])

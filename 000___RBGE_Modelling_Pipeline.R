@@ -131,8 +131,8 @@ require(raster)
 cutoff <- 10
 kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
 
-species <- sub(".csv", "", list.files("04_Species_To_Model_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
-dir.create("08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", showWarnings = F)
+species <- sub(".csv", "", list.files("03_Modelling/04_Species_To_Model_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
+dir.create("03_Modelling/08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", showWarnings = F)
 for(x in 1:length(species)){
   writeLines(paste("\nChecking ", species[[x]], " ..."))
   
@@ -146,8 +146,8 @@ for(x in 1:length(species)){
   # Save a "model ready" csv file for species with enough data points
   if(length(species_data[,1])>cutoff){
     writeLines("   ...Sufficient Presence Points")
-    unlink(paste("04_Species_To_Model_Distribution_Data/", species[[x]],".csv", sep=""))
-    write.csv(species_data, file=paste("08_Species_To_Model_Non_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))
+    unlink(paste("03_Modelling/04_Species_To_Model_Distribution_Data/", species[[x]],".csv", sep=""))
+    write.csv(species_data, file=paste("03_Modelling/08_Species_To_Model_Non_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))
   }
 }
 
