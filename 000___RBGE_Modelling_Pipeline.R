@@ -72,7 +72,6 @@
 ### -------------------------
 
 setwd("G:/000_Modeling_Working_Directory_000")
-setwd("000_Modeling_Working_Directory_000")
 source(paste(getwd(), "/01_Scripts/Minor_Modules/1___Prepare_Working_Space.R", sep=""))
 
 

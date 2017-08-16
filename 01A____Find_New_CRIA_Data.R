@@ -15,7 +15,7 @@
 require("XLConnect")
 
 distribution_data <- list.files('02_Input_Distribution_Data/CRIA', pattern="[.]xls$", full.names=T)
-distribution_data <- loadWorkbook(distribution_data)
+distribution_data <- loadWorkbook(distribution_data, create=T)
 distribution_data <- readWorksheet(distribution_data, sheet="sheet1", header=T)
 distribution_data <- as.data.frame(distribution_data)
 
@@ -54,10 +54,10 @@ require("rgdal")
 species_distribution_data <- lapply(1:length(species), function(x){distribution_data[distribution_data$scientific_name == species[[x]],]})
 
 #Save the data
-dir.create("03_Input_Distribution_Data_by_Species", showWarnings = F)
-dir.create("03_Input_Distribution_Data_by_Species/CRIA", showWarnings = F)
-lapply(species, function(y){dir.create(paste("03_Input_Distribution_Data_by_Species/CRIA/", y, sep=""), showWarnings = F)})
-lapply(1:length(species), function(y){write.csv(species_distribution_data[[y]], file=paste("03_Input_Distribution_Data_by_Species/CRIA/", species[[y]], "/data.csv", sep=""))})
+dir.create("03_Modelling/03_Input_Distribution_Data_by_Species", showWarnings = F)
+dir.create("03_Modelling/03_Input_Distribution_Data_by_Species/CRIA", showWarnings = F)
+lapply(species, function(y){dir.create(paste("03_Modelling/03_Input_Distribution_Data_by_Species/CRIA/", y, sep=""), showWarnings = F)})
+lapply(1:length(species), function(y){write.csv(species_distribution_data[[y]], file=paste("03_Modelling/03_Input_Distribution_Data_by_Species/CRIA/", species[[y]], "/data.csv", sep=""))})
 
 
 
@@ -65,21 +65,21 @@ lapply(1:length(species), function(y){write.csv(species_distribution_data[[y]], 
 ### Find Which Species Have not Previously Been Modelled at all
 ### -----------------------------------------------------------
 
-dir.create("99_Modelled_Species_Distribution_Data", showWarnings = F)
-dir.create("99_Modelled_Species_Distribution_Data/CRIA", showWarnings = F)
-dir.create("04_Species_To_Model_Distribution_Data", showWarnings = F)
-dir.create("04_Species_To_Model_Distribution_Data/CRIA", showWarnings = F)
+dir.create("03_Modelling/99_Modelled_Species_Distribution_Data", showWarnings = F)
+dir.create("03_Modelling/99_Modelled_Species_Distribution_Data/CRIA", showWarnings = F)
+dir.create("03_Modelling/04_Species_To_Model_Distribution_Data", showWarnings = F)
+dir.create("03_Modelling/04_Species_To_Model_Distribution_Data/CRIA", showWarnings = F)
 
 #species <- list.dirs("03_Input_Distribution_Data_by_Species/CRIA", full.names=F, recursive=F)
 
 # List previously modelled species
-previously_modelled_species <- list.dirs("99_Modelled_Species_Distribution_Data/CRIA", full.names=F, recursive=F)
+previously_modelled_species <- list.dirs("03_Modelling/99_Modelled_Species_Distribution_Data/CRIA", full.names=F, recursive=F)
 not_previously_modelled_species <- !(species %in% previously_modelled_species)
 
-lapply(species[not_previously_modelled_species], function(y){dir.create(paste("04_Species_To_Model_Distribution_Data/CRIA/", y, sep=""), showWarnings = F)})
+lapply(species[not_previously_modelled_species], function(y){dir.create(paste("03_Modelling/04_Species_To_Model_Distribution_Data/CRIA/", y, sep=""), showWarnings = F)})
 lapply((1:length(species)), function(y){
   if(not_previously_modelled_species[y])
-    {write.csv(species_distribution_data[[y]], paste("04_Species_To_Model_Distribution_Data/CRIA/", species[[y]], "/data.csv", sep=""))}
+    {write.csv(species_distribution_data[[y]], paste("03_Modelling/04_Species_To_Model_Distribution_Data/CRIA/", species[[y]], "/data.csv", sep=""))}
   })
 
 writeLines("\n\n##############################################################")
@@ -91,11 +91,11 @@ for(x in species[not_previously_modelled_species]){writeLines(x)}
 ### Find Which Species Have not Previously Been Modelled with the same data
 ### -----------------------------------------------------------------------
 
-previously_modelled_species <- list.dirs("99_Modelled_Species_Distribution_Data/CRIA", full.names=F, recursive=F)
+previously_modelled_species <- list.dirs("03_Modelling/99_Modelled_Species_Distribution_Data/CRIA", full.names=F, recursive=F)
 
 if(length(previously_modelled_species)>0){
 
-previously_modelled_species_distribution_data <- lapply(1:length(previously_modelled_species), function(x){read.csv(paste("99_Modelled_Species_Distribution_Data/CRIA/", previously_modelled_species[[x]], "/data.csv", sep=""))[,-1]})
+previously_modelled_species_distribution_data <- lapply(1:length(previously_modelled_species), function(x){read.csv(paste("03_Modelling/99_Modelled_Species_Distribution_Data/CRIA/", previously_modelled_species[[x]], "/data.csv", sep=""))[,-1]})
 
 species_to_crossref <- species[which(species %in% previously_modelled_species)]
 crossrefed_species <- c()
@@ -106,11 +106,11 @@ for(x in 1:length(species_to_crossref)){
   old_data <- previously_modelled_species_distribution_data[[old]]
 
   new <- which(species == species_to_crossref[[x]])
-  new_data <- read.csv(paste("03_Input_Distribution_Data_by_Species/CRIA/", species[[new]], "/data.csv", sep=""))[,-1]
+  new_data <- read.csv(paste("03_Modelling/03_Input_Distribution_Data_by_Species/CRIA/", species[[new]], "/data.csv", sep=""))[,-1]
 
   if(!identical(old_data,new_data)){
-    dir.create(paste("04_Species_To_Model_Distribution_Data/CRIA/", species_to_crossref[[x]], sep=""), showWarnings = F)
-    write.csv(new_data,paste("04_Species_To_Model_Distribution_Data/CRIA/", species_to_crossref[[x]], "/data.csv", sep=""))
+    dir.create(paste("03_Modelling/04_Species_To_Model_Distribution_Data/CRIA/", species_to_crossref[[x]], sep=""), showWarnings = F)
+    write.csv(new_data,paste("03_Modelling/04_Species_To_Model_Distribution_Data/CRIA/", species_to_crossref[[x]], "/data.csv", sep=""))
     crossrefed_species[[y]] <- species_to_crossref[[x]]
     y <- y+1
   }
