@@ -130,6 +130,7 @@ require(raster)
 # Specify how many distribution points are necessary
 cutoff <- 10
 kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
+#kde_raster <- aggregate(kde_raster, 2)
 
 species <- sub(".csv", "", list.files("03_Modelling/04_Species_To_Model_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 dir.create("03_Modelling/08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", showWarnings = F)
@@ -179,6 +180,7 @@ source(paste(getwd(), "/01_Scripts/03____Spatial_Filtering.R", sep=""))
 # Find the species
 species <- sub(".csv", "", list.files("03_Modelling/08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
+#kde_raster <- aggregate(kde_raster, 2)
 
 
 ### Produce a biased and a non-biased background sample for each species ###
@@ -200,6 +202,9 @@ source(paste(getwd(), "/01_Scripts/04____Background_Samples.R", sep=""))
 ######### - Perform a PCA to select environmental variables - ##########
 ########################################################################
 
+bg <- lapply(list.files(path="000_GIS_LAYERS/Brazil_Masked_GIS_Layers", pattern="*.tif$", full.names = T), raster)
+bg <- stack(bg)
+bg <- aggregate(bg, 2)
 
 source(paste(getwd(), "/01_Scripts/04____PCA.R", sep=""))
 
@@ -232,6 +237,8 @@ bg <- lapply(list.files(path="000_GIS_LAYERS/Brazil_Masked_GIS_Layers", pattern=
 # Usually you will have done a PCA by this point. Keep only those BG layers selected during the PCA  
 bg <- bg[PCA]
 bg <- stack(bg)
+bg <- aggregate(bg, 2)
+
 
 species <- sub(".csv", "", list.files("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 

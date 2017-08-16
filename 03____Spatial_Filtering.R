@@ -42,7 +42,7 @@ filterByProximity <- function(xy, dist, mapUnits = F) {
 }
 
 # Load in Data Frames
-species_data_frames <- lapply(1:length(species), function(x){read.csv(paste("08_Species_To_Model_Non_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))[,-1]})
+species_data_frames <- lapply(1:length(species), function(x){read.csv(paste("03_Modelling/08_Species_To_Model_Non_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))[,-1]})
 species_data_frames <- lapply(1:length(species), function(x){species_data_frames[[x]][!is.na(species_data_frames[[x]][,1]),]})
 
 
@@ -53,7 +53,7 @@ scale_corrected_species_data_frames <- lapply(species_data_frames, function(x){f
 scale_corrected_cell_number <- lapply(scale_corrected_species_data_frames, function(x){dim(as.data.frame(x))[1]})
 
 writeLines(paste("\nThe following species have fewer than five points following Spatial Filtering:\n"))
-dir.create("09_Species_To_Model_Scale_Corrected_Distribution_Data/", showWarnings = FALSE)
+dir.create("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data/", showWarnings = FALSE)
 for(x in 1:length(species)){
   if(scale_corrected_cell_number[[x]]>4){
     scale_corrected_species_data_frames[[x]] <- as.data.frame(scale_corrected_species_data_frames[[x]])
@@ -63,7 +63,7 @@ for(x in 1:length(species)){
     #scale_corrected_species_data_frames[[x]] <- bg_data[as.character(scale_corrected_species_data_frames[[x]][,3]),]
     
     
-    write.csv(scale_corrected_species_data_frames[[x]], paste("09_Species_To_Model_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))
+    write.csv(scale_corrected_species_data_frames[[x]], paste("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))
   }
   if(scale_corrected_cell_number[[x]]<5){
     writeLines(paste(species[[x]]))

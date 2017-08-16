@@ -16,9 +16,6 @@ species_distribution_data <- do.call(rbind, species_distribution_data)
 
 writeLines(paste("...Reading in background data"))
 
-bg <- lapply(list.files(path="000_GIS_LAYERS/Brazil_Masked_GIS_Layers", pattern="*.tif$", full.names = T), raster)
-bg <- stack(bg)
-
 writeLines(paste("...Extracting background data values"))
 
 values <- extract(bg, species_distribution_data[,3:2])
@@ -46,9 +43,7 @@ results <- rbind("Standard deviation" = pca_summary$sdev, "Proportion of varianc
 write.csv(results, "03_Modelling/98_PCA/pca_summary.csv", quote=F, row.names=T)
 
 
-rm(species_distribution_data, values, values_std, correlation, Bioclim_pca, pca_loadings, pca_summary, vars, results, bg)
-
-bg <- lapply(list.files(path="000_GIS_LAYERS/Brazil_Masked_GIS_Layers", pattern="*.tif$", full.names = T), raster)
+rm(species_distribution_data, values, values_std, correlation, Bioclim_pca, pca_loadings, pca_summary, vars, results)
 
 writeLines(paste("\n\n\n####################################################", sep=""))
 writeLines(paste("###              THE PCA HAS NOW RUN             ###", sep=""))
