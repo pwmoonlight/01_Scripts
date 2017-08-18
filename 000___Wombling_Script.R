@@ -125,7 +125,13 @@ library(RColorBrewer)
 #setwd("C:/_transfer/Papers/Nicaragua_Biomes/Maps/Masks")# this is Ivan's directory
 #setwd("J:/Jimenez/Nicaragua_Biomes/Maps/Masks") #from desktop 1ZTF at the Lehmann
 #read the mask
-Nordeste.mask.0 <- raster("000_GIS_LAYERS/nordeste.tif")
+Nordeste.mask.0 <- raster(list.files("03_Modelling/12_Thresholded_Models", pattern="*.tif", full.names = T)[[1]])
+nordeste <- readOGR("000_GIS_LAYERS/nordeste.shp", layer="nordeste")
+Nordeste.mask.0 <- crop(Nordeste.mask.0, nordeste)
+Nordeste.mask.0 <- mask(Nordeste.mask.0, nordeste)
+Nordeste.mask.0[Nordeste.mask.0[1:length(Nordeste.mask.0)]==1] <- 0
+writeRaster(Nordeste.mask.0, "000_GIS_LAYERS/nordeste.tif")
+
 #examine the properties of the mask
 class(Nordeste.mask.0)
 extent(Nordeste.mask.0)
@@ -171,7 +177,7 @@ dim(cell.adj)
 #in the plot, because an arbitrary part of the matrix cell.adj is selected
 from.coor <- xyFromCell(Nordeste.mask.0, cell.adj[1999:4500,1], spatial=FALSE)
 to.coor <- xyFromCell(Nordeste.mask.0, cell.adj[1999:4500,2], spatial=FALSE)
-plot(Nordeste.mask.0, xlim=c(-51.05919,-32.36665), ylim=c(-5,-1.05))
+plot(Nordeste.mask.0, xlim=c(-51.05919,-32.36665), ylim=c(-10,-1.05))
 #plot the center of grid cells
 points(rbind(from.coor, to.coor), pch=19, cex=0.9, col="blue")
 #plot the links
@@ -189,6 +195,7 @@ points(no.adj.coor, pch=19, cex=0.5, col="blue")
 #save in a file the links between grid cells
 #setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets") #this is for Ivan's laptop
 #setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #this is for desktop 1ZTF at the Lehmann
+dir.create("04_Wombling/Cell_Links", showWarnings=F)
 write.table(cell.adj, file="04_Wombling/Cell_Links/cell_adj_150arc.txt", sep=",")
 
 #read text file with previously defined links between grid cells
@@ -281,8 +288,8 @@ for(i in 1:length(species.level.dir[]))
 lapply(SDM.raster.names, eval) #checking this bit of code works
 length(lapply(SDM.raster.names, eval)) #checking it is of the right length
 SDM.b <- brick(lapply(SDM.raster.names, eval))
-SDM.b <- crop(SDM.b, Nordeste.mask.0)
-SDM.b <- mask(SDM.b, Nordeste.mask.0)
+SDM.b <- crop(SDM.b, nordeste)
+SDM.b <- mask(SDM.b, nordeste)
 #check the result
 class(SDM.b)
 res(SDM.b)
@@ -588,13 +595,13 @@ length(unique(r.obs.beta))
 r.obs.beta[1:100]
 
 #define the percentiles of beta-diversity that will be evaluated against the null model
-beta.ranks.to.evaluate <- 141232 - round(141232*seq(0.05, 0.5, 0.05))
+beta.ranks.to.evaluate <- 35082 - round(35082*seq(0.05, 0.5, 0.05))
 
 plot(r.obs.beta, obs.beta, bty="n", cex.axis=1.5, cex.lab=1.5)
 abline(v= beta.ranks.to.evaluate, lty=3)
 abline(h= obs.beta[match(beta.ranks.to.evaluate, r.obs.beta)], lty=3)
 #
-plot(r.obs.beta, obs.beta, bty="n", cex.axis=1.5, cex.lab=1.5, xlim=c(6000,141232), ylim=c(0,0.1))
+plot(r.obs.beta, obs.beta, bty="n", cex.axis=1.5, cex.lab=1.5, xlim=c(6000,35082), ylim=c(0,0.1))
 abline(v= beta.ranks.to.evaluate, lty=3)
 abline(h= obs.beta[match(beta.ranks.to.evaluate, r.obs.beta)], lty=3)
 
@@ -772,14 +779,14 @@ start.time <- Sys.time()
 # 
 for(i in 1:length(obs.beta))
 {
-  print(i/141232*100)
+  print(i/35082*100)
   candidate.boundary.elements.to.deploy <- which(r.obs.beta > (length(r.obs.beta)-i))
   #candidate.boundary.elements.to.deploy <- which(obs.beta >= quantile(obs.beta, probs=selected.quantile[i]))
   number.of.subgraphs[i] <- components(delete_edges(Nicaragua.graph, candidate.boundary.elements.to.deploy))$no
   #values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta, probs=selected.quantile[i]))
   #points(values.at.above.quantile, number.of.subgraphs[i], pch=19)
   #points(1-selected.quantile[i], number.of.subgraphs[i], pch=19)
-  #points(i, number.of.subgraphs[i], pch=19)
+  points(i, number.of.subgraphs[i], pch=19)
 }
 difftime(Sys.time(), start.time, units="mins")
 #this procedure might take about 1 or 2 minutes, depending on which computer is used
@@ -802,39 +809,39 @@ abline(v=match(50000, number.of.subgraphs), lty=3)
 abline(h=50000, lty=3)
 abline(v=30829, lty=3)
 abline(v=number.of.subgraphs[30829], col="red")
-abline(v=141232 - beta.ranks.to.evaluate, lty=3)
-abline(h=number.of.subgraphs[141232 - beta.ranks.to.evaluate], lty=3)
+abline(v=35082 - beta.ranks.to.evaluate, lty=3)
+abline(h=number.of.subgraphs[35082 - beta.ranks.to.evaluate], lty=3)
 
 plot(1:length(number.of.subgraphs), number.of.subgraphs, xlim=c(0,6385), ylim=c(0,1600),
      xlab="Candidate boundary elements deployed", ylab="Regions (or subgraphs)",
      pch=19, bty="n", cex.axis=1.5, cex.lab=1.5) 
-abline(v=141232 - beta.ranks.to.evaluate, lty=3)
-abline(h=number.of.subgraphs[141232 - beta.ranks.to.evaluate], lty=3)
+abline(v=35082 - beta.ranks.to.evaluate, lty=3)
+abline(h=number.of.subgraphs[35082 - beta.ranks.to.evaluate], lty=3)
 
 plot(1:length(number.of.subgraphs), number.of.subgraphs, xlim=c(400, 800), ylim=c(0,20),
      xlab="Candidate boundary elements deployed", ylab="Regions (or subgraphs)",
      pch=19, bty="n", cex.axis=1.5, cex.lab=1.5) 
-abline(v=141232 - beta.ranks.to.evaluate, lty=3)
+abline(v=35082 - beta.ranks.to.evaluate, lty=3)
 abline(v=match(pick.num.subgraphs, number.of.subgraphs), lty=3)
-abline(h=number.of.subgraphs[141232 - beta.ranks.to.evaluate], lty=3)
+abline(h=number.of.subgraphs[35082 - beta.ranks.to.evaluate], lty=3)
 
 #examine the number of regions (potential ecoregions or subgraphs) to evaluate against null models
-number.of.subgraphs[141232 - beta.ranks.to.evaluate]
+number.of.subgraphs[35082 - beta.ranks.to.evaluate]
 
 #save file with number of subgraphs, derived from the taxonomic (i.e, species based) or phylogenetic
 #versions of Sorensen's or Simpson's indices
-setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets") #from Ivan's laptop
-setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
-#write.table(number.of.subgraphs, file="NumberSubgraphsSorBestModels_150arc_2017June13.txt", sep=",", row.names=F)
-#write.table(number.of.subgraphs, file="NumberSubgraphsSimBestModels_150arc_2017June13.txt", sep=",", row.names=F)
+#setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets") #from Ivan's laptop
+#setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
+#write.table(number.of.subgraphs, file="04_Wombling/NumberSubgraphsSor.txt", sep=",", row.names=F)
+write.table(number.of.subgraphs, file="04_Wombling/NumberSubgraphsSim.txt", sep=",", row.names=F)
 #write.table(number.of.subgraphs, file="NumberSubgraphsPhyloSorBestModels_150arc_2017June13.txt", sep=",", row.names=F)
 #write.table(number.of.subgraphs, file="NumberSubgraphsPhyloSimBestModels_150arc_2017June13.txt", sep=",", row.names=F)
 
 #read file with number of subgraphs, derived from Sorensen's index
-setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets") #from Ivan's laptop
-setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
+#setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets") #from Ivan's laptop
+#setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
 #number.of.subgraphs <- read.table("NumberSubgraphsSorBestModels_150arc_2017June13.txt", header=T, sep=",")
-#number.of.subgraphs <- read.table("NumberSubgraphsSimBestModels_150arc_2017June13.txt", header=T, sep=",")
+number.of.subgraphs <- read.table("04_Wombling/NumberSubgraphsSim.txt", header=T, sep=",")
 #number.of.subgraphs <- read.table("NumberSubgraphsPhyloSorBestModels_150arc_2017June13.txt", header=T, sep=",")
 #number.of.subgraphs <- read.table("NumberSubgraphsPhyloSimBestModels_150arc_2017June13.txt", header=T, sep=",")
 head(number.of.subgraphs)
@@ -855,10 +862,10 @@ number.of.subgraphs[1:100]
 
 #define the percentiles of beta-diversity for which superfluity will be claculated,
 #if you have not done so in section 8 (above)
-beta.ranks.to.evaluate <- 141232 - round(141232*seq(0.05, 0.5, 0.05))
+beta.ranks.to.evaluate <- 35082 - round(35082*seq(0.05, 0.5, 0.05))
 
 #define the number of regions (potentially ecoregions or "subgraphs") for which superfluity will be calculated
-evaluation.number.of.subgraphs <- number.of.subgraphs[141232 - beta.ranks.to.evaluate]
+evaluation.number.of.subgraphs <- number.of.subgraphs[35082 - beta.ranks.to.evaluate]
 
 #check that all evaluation points exist in the vector "number.of.subgraphs"
 match(evaluation.number.of.subgraphs, number.of.subgraphs)  
@@ -873,6 +880,7 @@ plot(min(evaluation.number.of.subgraphs), 0,
      bty="n", xlab="Regions (or subgraphs)", ylab="Superfluity", cex.lab=1.5, cex.axis=1.5, type="n")
 for (j in evaluation.number.of.subgraphs)
 {
+  print(paste(which(evaluation.number.of.subgraphs == j), "of", length(evaluation.number.of.subgraphs)))
   candidate.boundary.elements.to.delete <- which(r.obs.beta > (length(r.obs.beta) - match(j, number.of.subgraphs)))
   focal.graph <- delete_edges(Nicaragua.graph, candidate.boundary.elements.to.delete)
   #focal.graph
@@ -910,20 +918,20 @@ plot(log(evaluation.number.of.subgraphs), log(superfluity), pch=19,
 
 #write files with superfluity values, derived from the taxonomic (i.e., species based) or phylogenetic
 #versions of Sorensen's or Simpson's indices
-setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets") #from Ivan's laptop
-setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
+#setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets") #from Ivan's laptop
+#setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
 #write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="SuperfluitySorBestModels_150arc_2017June13.txt", sep=",", row.names=F)
 #write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="SuperfluityPhyloSorBestModels_150arc_2017June13.txt", sep=",", row.names=F)
-#write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="SuperfluitySimBestModels_150arc_2017June13.txt", sep=",", row.names=F)
+write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluitySimBestModels.txt", sep=",", row.names=F)
 #write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="SuperfluityPhyloSimBestModels_150arc_2017June13.txt", sep=",", row.names=F)
 
 #read file with superfluity values, dderived from the taxonomic (i.e., species based) or phylogenetic
 #versions of Sorensen's or Simpson's indices
-setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets") #from Ivan's laptop
-setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
+#setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets") #from Ivan's laptop
+#setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
 superfluity <- read.table("SuperfluitySorBestModels_150arc_2017June13.txt", header=T, sep=",")
 superfluity <- read.table("SuperfluityPhyloSorBestModels_150arc_2017June13.txt", header=T, sep=",")
-superfluity <- read.table("SuperfluitySimBestModels_150arc_2017June13.txt", header=T, sep=",")
+superfluity <- read.table("04_Wombling/SuperfluitySimBestModels.txt", header=T, sep=",")
 superfluity <- read.table("SuperfluityPhyloSimBestModels_150arc_2017June13.txt", header=T, sep=",")
 head(superfluity)
 class(superfluity)
@@ -942,9 +950,9 @@ superfluity <- superfluity[,2]
 ##################################################################################################
 
 #select the number of regions (potential ecoregions) or subgraphs to map
-#number.of.subgraphs[141232 - beta.ranks.to.evaluate]
-#141232 - beta.ranks.to.evaluate
-pick.num.subgraphs <- 1277
+#number.of.subgraphs[35082 - beta.ranks.to.evaluate]
+#35082 - beta.ranks.to.evaluate
+pick.num.subgraphs <- 4147
 #make sure that the number you selected exists in the vector talling the number of subgraphs
 match(pick.num.subgraphs, number.of.subgraphs)
 #length(number.of.subgraphs)
@@ -986,7 +994,7 @@ head(SizeRegions)
 comp.coor <-  as.list (rep(NA, times=components(modified.Nicaragua.graph)$no))
 for(j in 1:components(modified.Nicaragua.graph)$no)
 {
-  comp.coor[[j]] <- xyFromCell(Nicaragua.mask.0.150arc, as.numeric(names(components(modified.Nicaragua.graph)$membership))[components(modified.Nicaragua.graph)$membership==j], spatial=FALSE)
+  comp.coor[[j]] <- xyFromCell(Nordeste.mask.0, as.numeric(names(components(modified.Nicaragua.graph)$membership))[components(modified.Nicaragua.graph)$membership==j], spatial=FALSE)
 }
 
 #save the coordinates of the center of the cells in each region or subgraph
@@ -1007,7 +1015,7 @@ for(j in 1:components(modified.Nicaragua.graph)$no)
 }
 
 #create a raster of regions or subgraphs
-Nicaragua.mask.Regions <- Nicaragua.mask.0.150arc
+Nicaragua.mask.Regions <- Nordeste.mask.0
 Nicaragua.mask.Regions[] <- NA
 Nicaragua.mask.Regions[unlist(comp.cells)] <- rep(1:length(comp.cells), times=lapply(comp.cells, length))
 Nicaragua.mask.Regions
@@ -1028,7 +1036,7 @@ summary(Nicaragua.mask.Regions)
 ##################################################################################################
 
 #define and examine colors to map regions
-number.of.colors <- 1277
+number.of.colors <- 4147
 subgraph.col <- colorRampPalette(brewer.pal(12,"Paired"))(number.of.colors)
 #set.seed(25) #works ok for 408 regions, 0.001 threshold
 subgraph.col <- sample(subgraph.col, length(subgraph.col))
@@ -1043,21 +1051,21 @@ plot(Nicaragua.mask.Regions, col=subgraph.col)
 #plot regions, broad scale
 plot(Nicaragua.mask.Regions, col=subgraph.col, useRaster=T, legend=F)
 #plot regions, narrower scale
-plot(Nicaragua.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-87,-85), ylim=c(13,15))
-plot(Nicaragua.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-87,-85), ylim=c(11,13))
-plot(Nicaragua.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(10.5,13))
-plot(Nicaragua.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(13,15.5))
+plot(Nicaragua.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-12,10))
+plot(Nicaragua.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-25,-12))
+plot(Nicaragua.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-12,10))
+plot(Nicaragua.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-25,-12))
 #plot regions, even narrower scale
 plot(Nicaragua.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-84,-83.5), ylim=c(13.5,14))
 plot(Nicaragua.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-84.5,-84), ylim=c(11.5,12))
 
 #plot the mask, broad scale
-plot(Nicaragua.mask.0.150arc, col="white", useRaster=T, legend=F)
+plot(Nordeste.mask.0, col="white", useRaster=T, legend=F)
 #plot the mask, narrower scale
-plot(Nicaragua.mask.0.150arc, col="white", useRaster=T, legend=F, xlim=c(-87,-85), ylim=c(13,15))
-plot(Nicaragua.mask.0.150arc, col="white", useRaster=T, legend=F, xlim=c(-87,-85), ylim=c(11,13))
-plot(Nicaragua.mask.0.150arc, col="white", useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(10.5,13))
-plot(Nicaragua.mask.0.150arc, col="white", useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(13,15.5))
+plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-12,10))
+plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-25,-12))
+plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-12,10))
+plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-25,-12))
 #plot the mask, even narrower scale
 plot(Nicaragua.mask.0.150arc, col="white", useRaster=T, legend=F, xlim=c(-84,-83.5), ylim=c(13.5,14))
 plot(Nicaragua.mask.0.150arc, col="white", useRaster=T, legend=F, xlim=c(-84.5,-84), ylim=c(11.5,12))

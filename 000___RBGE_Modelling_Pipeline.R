@@ -180,7 +180,7 @@ source(paste(getwd(), "/01_Scripts/03____Spatial_Filtering.R", sep=""))
 # Find the species
 species <- sub(".csv", "", list.files("03_Modelling/08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
-#kde_raster <- aggregate(kde_raster, 2)
+kde_raster <- aggregate(kde_raster, 2)
 
 
 ### Produce a biased and a non-biased background sample for each species ###
@@ -289,7 +289,7 @@ source(paste(getwd(), "/01_Scripts/Minor_Modules/7___Plot_Models.R", sep=""))
 # This is done with a 10% training threshold
 
 source(paste(getwd(), "/01_Scripts/08___Thresholds_Models.R", sep=""))
-species <- sub(".csv", "", list.files("03_Modelling/12_Thresholded_Models", pattern=".tif", full.names=F, recursive=F))
+species <- gsub(".{4}$", "", list.files("03_Modelling/12_Thresholded_Models", pattern=".tif", full.names=F, recursive=F))
 source(paste(getwd(), "/01_Scripts/Minor_Modules/8___Plot_Thresholded_Models.R", sep=""))
 
 
