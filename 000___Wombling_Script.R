@@ -411,6 +411,7 @@ brick.index.species.in.phylogeny <- which(!is.na(match(species.genus, Nicaragua.
 ############################################################################################################################
 
 brick.index.species.in.phylogeny <- names(SDM.b)
+#species.genus <- names(SDM.b)
 
 # Obtain, for all pairs of adjacent grid cells, terms to calculate beta-diversity.
 # First, using a matrix indicate:
@@ -950,7 +951,7 @@ superfluity <- superfluity[,2]
 ##################################################################################################
 
 #select the number of regions (potential ecoregions) or subgraphs to map
-#number.of.subgraphs[35082 - beta.ranks.to.evaluate]
+number.of.subgraphs[35082 - beta.ranks.to.evaluate]
 #35082 - beta.ranks.to.evaluate
 pick.num.subgraphs <- 4147
 #make sure that the number you selected exists in the vector talling the number of subgraphs
@@ -987,8 +988,8 @@ axis(2, at=c(2), labels=c(1), cex.axis=1.5)
 #read file with region size
 #setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets") #from Ivan's laptop
 #setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
-SizeRegions <- read.table("SizeRegions176.txt", header=T, sep=",")
-head(SizeRegions)
+#SizeRegions <- read.table("SizeRegions176.txt", header=T, sep=",")
+#head(SizeRegions)
 
 #obtain the coordinates of the center of the cells assigned to each region or subgraph
 comp.coor <-  as.list (rep(NA, times=components(modified.Nicaragua.graph)$no))
@@ -1074,14 +1075,14 @@ plot(Nicaragua.mask.0.150arc, col="white", useRaster=T, legend=F, xlim=c(-84.5,-
 SpeciesRegions <- matrix(NA, nrow=pick.num.subgraphs, ncol=length(brick.index.species.in.phylogeny))
 for(i in 1:length(brick.index.species.in.phylogeny))
 {
-  SpeciesRegions[,i] <- zonal(raster(SDM.b.150arc, layer=brick.index.species.in.phylogeny[i]), Nicaragua.mask.Regions, fun='sum', digits=0, na.rm=TRUE)[,2] 
+  SpeciesRegions[,i] <- zonal(raster(SDM.b, layer=brick.index.species.in.phylogeny[i]), Nicaragua.mask.Regions, fun='sum', digits=0, na.rm=TRUE)[,2] 
 }
 #examine resulting matrix
 SpeciesRegions[1:5,1:5]
 dim(SpeciesRegions)
 #convert the matrix data to logical (true/false) data
 SpeciesRegions <- SpeciesRegions > 0
-colnames(SpeciesRegions) <- species.genus[brick.index.species.in.phylogeny]
+colnames(SpeciesRegions) <- species.genus[]
 SpeciesRegions[SpeciesRegions==T] <- 1
 #examine the results
 SpeciesRegions[1:5,1:5]
@@ -1090,12 +1091,12 @@ dim(SpeciesRegions)
 #save files with species composition of for each region
 #setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets")
 #setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
-write.table(SpeciesRegions, "SpeciesRegions95.txt", quote=T, sep=",")
-write.table(SizeRegions, "SizeRegions95.txt", quote=T, sep=",")
+write.table(SpeciesRegions, "04_Wombling/SpeciesRegions95.txt", quote=T, sep=",")
+write.table(SizeRegions, "04_Wombling/SizeRegions95.txt", quote=T, sep=",")
 
 #read files with species composition of for each region
 #setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets")
 #setwd("J:/Jimenez/Nicaragua_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
-SpeciesRegions <- read.table("SpeciesRegions176.txt", header=T, sep=",")
+SpeciesRegions <- read.table("04_Wombling/SpeciesRegions95.txt", header=T, sep=",")
 head(SpeciesRegions)
 dim(SpeciesRegions)
