@@ -159,11 +159,10 @@ for(h in 1: nlayers(SDM.b))
 
 length(MCLUST.model.names)
 length(unique(MCLUST.model.names))
-length(unlist(lapply(strsplit(dir(), split=c("."), fixed = T), function(x) x[1])))
 
 which(is.na(
   match(MCLUST.model.names,
-        unlist(lapply(strsplit(dir(), split=c("."), fixed = T), function(x) x[1])))
+        unlist(lapply(strsplit(list.files("05_Wombling_Null_Models/01_McClust"), split=c("."), fixed = T), function(x) x[1])))
 ))
 
 
