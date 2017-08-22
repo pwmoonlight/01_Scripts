@@ -26,8 +26,12 @@ example_model <- calc(example_model, fun=rc)
 for(x in 1:length(species)){
   model <- raster(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], ".tif", sep=""))
   threshold_value <- read.csv(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], "/maxentResults.csv", sep=""))
-  threshold_value <- threshold_value$X10.percentile.training.presence.logistic.threshold[6]
-  
+  if(length(threshold_value$X10.percentile.training.presence.logistic.threshold[6]) == 1){
+    threshold_value <- threshold_value$X10.percentile.training.presence.logistic.threshold[6]
+  }
+  if(length(threshold_value$X10.percentile.training.presence.Cloglog.threshold[6]) == 1){
+    threshold_value <- threshold_value$X10.percentile.training.presence.logistic.threshold[6]
+  }
   sp.circle <- readShapePoly(paste("03_Modelling/05_Species_Circles/", species[[x]], ".shp", sep=""))
   
   writeLines(paste("\nWorking on", species[[x]]))
