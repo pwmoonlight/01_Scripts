@@ -2,93 +2,6 @@
 ############################################################################################################################
 ############################################################################################################################
 #
-# INTRODUCTION TO THE SCRIPT "Wombling_SDMData_150arc_2017August04.R"
-#
-# A) What does this script do?
-#
-# This script identifies areas of Nordeste that could potentially be ecoregions, defined as as areas that are relatively
-# homogeneous in plant species composition and encircled by boundaries that represent spatial discontinuities in plant species
-# composition. To do so the script calculates observed beta-diversity between adjacent grid cells of 150 arc seconds across
-# Nordeste, based on species distribution modes that estimate the geographic distributions of 891 species. The analytical
-# method used in this script is known as "categorical wombling", described by:
-# - Oden, N.L., Sokal, R.R., Fortin, M.J. and Hans Goebl. (1993) Categorical Wombling: Detecting regions of significant change
-# in spatially located categorical variables. Geographical Analysis, Vol. 25, No. 4)
-# - Fortin, M.J. and Drapeau, P. (1995) Delineation of Ecological Boundaries: Comparison of Approaches and Significance Tests.
-# OIKOS 72: 323-332.
-# See also:
-# - Fortin, M. J & Dale, M. R. (2005). Spatial analysis: a guide for ecologists. Cambridge University Press.
-#
-# B) What is needed to run this script?
-#
-# If you want to run all processes in the script, you need the packages loaded in section 1 (below) and the
-# following files, listed below their corresponding directory: 
-#
-# B.1)
-# setwd("C:/_transfer/Papers/Nordeste_Biomes/Models)") #from Ivan's laptop
-# setwd("J:/Jimenez/Nordeste_Biomes/Models") #from desktop 1ZTF at the Lehmann
-# - raster files for all of the species distribution models, or a brick with all these files (see B.6 below)
-#
-# B.2)
-# setwd("C:/_transfer/Papers/Nordeste_Biomes/Models_Summary_Best") #this is from Ivan's desktop
-# setwd("J:/Jimenez/Nordeste_Biomes/Models_Summary_Best") #this is for desktop 1ZTF at the Lehmann
-# - file summarizing the performance of species distribution models: "Summary_model_performance - 2015Sept30.csv"
-#
-# B.3)
-# setwd("C:/_transfer/Papers/Nordeste_Biomes/Maps/Masks")# this is Ivan's directory
-# setwd("J:/Jimenez/Nordeste_Biomes/Maps/Masks")#from desktop 1ZTF at the Lehmann
-# - raster mask for Nordeste: "mask0_gadm_10kmBuffer_2015July23.tif"
-#
-# B.4) 
-# setwd("C:/_transfer/Papers/Nordeste_Biomes/Datasets") #from Ivan's laptop
-# setwd("J:/Jimenez/Nordeste_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
-# - file with the phylogeny for the species included in the analysis:
-# "intree.collapsed.dated.thorough.tre"
-#
-# B.5)
-# List of species included in the analysis (all included in the Nordeste phylogeny)
-# setwd("C:/_transfer/Papers/Nordeste_Biomes/Datasets") #from Ivan's laptop
-# setwd("J:/Jimenez/Nordeste_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
-# "SpeciesInAnalysis_2016June21.txt"
-#
-# Running several of the processes in this script may take many hours or days. So you might want to have files with
-# the results of several of those processes. If you decide to go that route, you would not need
-# the raster files with the species distribution models, nor the file summarizing the performance of species distribution
-# models. However, you would need the raster mask mentioned above (B.3), as well as at least some of the files listed below
-# under their corresponding directory. In the heading of each script section you will find instructions as to when it is
-# advisable to read each of these files.
-#
-# B.6)
-# setwd("C:/_transfer/Papers/Nordeste_Biomes/Maps/Masks")# this is Ivan's directory
-# setwd("J:/Jimenez/Nordeste_Biomes/Maps/Masks")#from desktop 1ZTF at the Lehmann
-# - raster mask for Nordeste at a resolution of 150 arc seconds: "mask0_gadm_10kmBuffer_150arc_2015Oct27.tif"
-#
-# B.7)
-# setwd("C:/_transfer/Papers/Nordeste_Biomes/Models/All_species_in_a_brick_BestModels") #from Ivan's laptop
-# setwd("J:/Jimenez/Nordeste_Biomes/Models/All_species_in_a_brick_BestModels") #from desktop 1ZTF at the Lehmann
-# - file that has the brick with the species distribution models of all species at a resolution of 150 arc seconds:
-# "SDMb_150arc_2017June12.grd"
-#
-# B.8)
-# setwd("C:/_transfer/Papers/Nordeste_Biomes/Datasets") #from Ivan's laptop
-# setwd("J:/Jimenez/Nordeste_Biomes/Datasets") #from desktop 1ZTF at the Lehmann
-# - definition of spatial links between grid cells, stored in the text file:
-# "cell_adj_150arc.txt"
-#
-# - files with beta-diversity measured as taxonomic (i.e., species-based) and phylogenetic Sorensen's and Simpson's indexes:
-# "ObsBetaSim_BestModels_150arc_2017June13", "ObsBetaSor_BestModels_150arc_2017June13",
-# "ObsPhyloBetaSim_BestModels_150arc_2017June19.txt", "ObsPhyloBetaSor_BestModels_150arc_2017June19.txt"
-# 
-# - files with the ranks of beta-diversity values measured as taxonomic and phylogenetic Sorensen's and Simpson's indexes:
-# "Rank_ObsBetaSim_BestModels_150arc_2017June13.txt", "Rank_ObsBetaSor_BestModels_150arc_2017June13.txt",
-# "Rank_ObsPhyBetaSim_BestModels_150arc_2017June19.txt", "Rank_ObsPhyBetaSor_BestModels_150arc_2017June19.txt"
-#
-# - files with number of subgraphs, derived from taxonomic and phylogenetic Sorensen's and Simpson's indexes:
-# "NumberSubgraphsSimBestModels_150arc_2017June13.txt", "NumberSubgraphsSorBestModels_150arc_2017June13.txt",
-# "NumberSubgraphsPhyloSorBestModels_150arc_2017June13", "NumberSubgraphsPhyloSimBestModels_150arc_2017June13.txt", 
-# 
-# - file with superfluity values, derived from taxonomic and phylogenetic Sorensen's and Simpson's indexes:
-# "SuperfluitySimBestModels_150arc_2017June13.txt", "SuperfluitySorBestModels_150arc_2017June13.txt", 
-# "SuperfluityPhyloSorBestModels_150arc_2017June13.txt", "SuperfluityPhyloSimBestModels_150arc_2017June13.txt"
 #
 ############################################################################################################################
 ############################################################################################################################
@@ -113,208 +26,41 @@ library(RColorBrewer)
 ############################################################################################################################
 
 ############################################################################################################################
-# 2.1) Create a raster mask with a resolution of 5*30 = 150 arc seconds resolution, which is 2.5 minutes
-# or 0.04166667 X 0.04166667 degrees. You may skip this step (and go to 2.2) because the raster mask is
-# already available.
+# 2.1) Read in the mask of the study area
 ############################################################################################################################
 
 #create and plot the Nordeste raster mask that indicates the grid cells that have climate data,
-Nordeste.mask.0 <- raster(list.files("03_Modelling/12_Thresholded_Models", pattern="*.tif", full.names = T)[[1]])
-nordeste <- readOGR("000_GIS_LAYERS/nordeste.shp", layer="nordeste")
-Nordeste.mask.0 <- crop(Nordeste.mask.0, nordeste)
-Nordeste.mask.0 <- mask(Nordeste.mask.0, nordeste)
-Nordeste.mask.0[Nordeste.mask.0[1:length(Nordeste.mask.0)]==1] <- 0
-writeRaster(Nordeste.mask.0, "000_GIS_LAYERS/nordeste.tif", overwrite=T)
-plot(Nordeste.mask.0)
-
-#examine the properties of the mask
-class(Nordeste.mask.0)
-extent(Nordeste.mask.0)
-res(Nordeste.mask.0) #this is the resolution of the mask
-attributes(Nordeste.mask.0)
-str(Nordeste.mask.0)
-
-#examine the total number of grid cells, the frequency of grid cells
-#that are NA and not-NA, and determine cell number (or cell ID) of
-#the cells that are not NA
-ncell(Nordeste.mask.0) #total number of cells
-length(Nordeste.mask.0[is.na(Nordeste.mask.0)]) # of NA cells
-length(Nordeste.mask.0[!is.na(Nordeste.mask.0)]) #number of not-NA cells
-#create a vector with the cell number (or cell ID) of cells that are not-NA
-no.na.cells <- (1:ncell(Nordeste.mask.0))[!is.na(extract(Nordeste.mask.0, 1:ncell(Nordeste.mask.0)))]
-length(no.na.cells)
+Nordeste.mask.0 <- raster("000_GIS_LAYERS/nordeste.tif")
 
 ############################################################################################################################
-# 2.3) Define adjacent grid cells. You might want to skip to the end of this section, and use previously defined spatial
-# links between grid cells, stored in the text file "cell_adj.txt".  
+# 2.3) Read in the adjacent grid cells  
 ############################################################################################################################
 
-#define adjacent grid cells, but only for cells that are not-NA in
-#the raster with the species distribution model,
-#the code below uses "rook's move neighbors" to define adjacent cells
-cell.neig <- adjacent(Nordeste.mask.0, cells=no.na.cells, directions=4, pairs=T, target=no.na.cells, sorted=T)
-cell.neig[1:10,]
-dim(cell.neig)
-#note that each pair of neighboring cells shows up twice in the
-#matrix "cell.neig"; the following code removes duplicates 
-flag.pairs.to.retain <- (cell.neig[,1] - cell.neig[,2])<0
-length(flag.pairs.to.retain)
-sum(flag.pairs.to.retain)
-flag.pairs.to.retain[1:100]
-cell.adj <- cell.neig[flag.pairs.to.retain,]
-cell.adj[1:10,]
-dim(cell.adj)
-
-#plot some of the links between grid cells, but note that not all links need to appear
-#in the plot, because an arbitrary part of the matrix cell.adj is selected
-from.coor <- xyFromCell(Nordeste.mask.0, cell.adj[1999:4500,1], spatial=FALSE)
-to.coor <- xyFromCell(Nordeste.mask.0, cell.adj[1999:4500,2], spatial=FALSE)
-plot(Nordeste.mask.0, xlim=c(-51.05919,-32.36665), ylim=c(-10,-1.05))
-#plot the center of grid cells
-points(rbind(from.coor, to.coor), pch=19, cex=0.9, col="blue")
-#plot the links
-arrows(from.coor[,1], from.coor[,2], to.coor[,1], to.coor[,2], length = 0, code = 2, col="red")
-#examine cells with no adjacent cells
-no.na.cells[is.na(match(no.na.cells, unique(c(cell.adj[,1], cell.adj[,2]))))]
-no.adj.coor <- xyFromCell(Nordeste.mask.0, no.na.cells[is.na(match(no.na.cells, unique(c(cell.adj[,1], cell.adj[,2]))))], spatial=FALSE)
-plot(Nordeste.mask.0, xlim=c(-51.05919,-32.36665), ylim=c(-22.9,-1.05))
-points(no.adj.coor, pch=19, cex=0.5, col="blue")
-plot(Nordeste.mask.0, xlim=c(-51.05919,-32.36665), ylim=c(-22.9,-1.05))
-points(no.adj.coor, pch=19, cex=0.5, col="blue")
-plot(Nordeste.mask.0, xlim=c(-51.05919,-32.36665), ylim=c(-22.9,-1.05))
-points(no.adj.coor, pch=19, cex=0.5, col="blue")
-
-#save in a file the links between grid cells
-dir.create("04_Wombling/Cell_Links", showWarnings=F)
-write.table(cell.adj, file="04_Wombling/Cell_Links/cell_adj_150arc.txt", sep=",")
-
-#read text file with previously defined links between grid cells
 cell.adj <- read.table("04_Wombling/Cell_Links/cell_adj_150arc.txt", sep=",", header=T)
-
 
 #############################################################################
 # 3) Create an R object of class "brick" with all species distribution models
 #############################################################################
 
-#read and examine the file with information on the species to be included in the analysis,
-#and the best performing SDM for each of those species:
+bricks <- gsub("Null_", "", list.files("05_Wombling_Null_Models/03_Null_Bricks", pattern="*.grd"))
+bricks <- gsub("_SDMb.grd", "", bricks)
+species.in.analysis <- read.csv("04_Wombling/species_in_analysis.txt", header=F)
 
-Sum.SDM.Perf <- read.table("03_Modelling/CBI_results.csv", header=T, sep=",")
-head(Sum.SDM.Perf)
-
-#Remove any species form the analysis with CBI values < 0.5
-Sum.SDM.Perf <- Sum.SDM.Perf[Sum.SDM.Perf[,7] > 0.5,]
-
-#Remove any species form the analysis with AUC values < 0.75
-Sum.SDM.Perf <- Sum.SDM.Perf[Sum.SDM.Perf[,13] > 0.7,]
-
-species.in.analysis <- Sum.SDM.Perf[,1]
-species.in.analysis
-
-#save in a file the names of the species included in the analysis
-write.table(species.in.analysis, file="04_Wombling/species_in_analysis.txt", quote=T, sep=",", row.names=F, col.names=F)
-
-#read the raster files with SDMs for the species to be included in the analysis, make sure
-#to use the correct directories within the loop
-
-species.level.dir <- lapply(1:length(species.in.analysis), function(x){raster(paste("03_Modelling/12_Thresholded_Models/", as.character(species.in.analysis)[[x]], ".tif", sep=""))})
-
-#create an R object of class "brick" with species distribution models for all species,
-#first create a list of the names of raster objects (with species distribution models)
-#that will be included in the "brick":
-SDM.raster.names <- vector(mode = "list", length = length(species.level.dir))
-for(i in 1:length(species.level.dir[]))
-{
-  SDM.raster.names[[i]]  <- species.level.dir[[i]]@file@name
-}
-#now create the "brick"
-lapply(SDM.raster.names, eval) #checking this bit of code works
-length(lapply(SDM.raster.names, eval)) #checking it is of the right length
-SDM.b <- brick(lapply(SDM.raster.names, eval))
-SDM.b <- crop(SDM.b, nordeste)
-SDM.b <- mask(SDM.b, nordeste)
-#check the result
-class(SDM.b)
-res(SDM.b)
-dim(SDM.b)
-SDM.b
-
-#save in a file the brick with the species distribution models of all species in the analysis that has 30 arc seconds resolution
-rasterOptions(datatype="LOG1S") #specify datatype (true/false or presence/absence) to efficiently save the brick file  
-writeRaster(SDM.b, filename="04_Wombling/SDM_brick.grd", bandorder='BIL')
-
-#save in a file the brick with the species distribution models of all species in the analysis
 rasterOptions(datatype="LOG1S") #specify datatype (true/false or presence/absence) to efficiently save the brick file  
 
-#read the file that has the brick with the species distribution models of all species
-SDM.b <- brick("04_Wombling/SDM_brick.grd")
-SDM.b
-str(SDM.b)
-nlayers(SDM.b)
-names(SDM.b)
-
+# Create Folders in which to store the results
+dir.create("05_Wombling_Null_Models/04_Null_Beta_Diversity", showWarnings = F)
+lapply(bricks, function(x){dir.create(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", x, sep=""), showWarnings = F)})
 
 ############################################################################################################################
 # 4) Read and examine the phylogeny for the species in the analysis (the "Nordeste phylogeny")
 ############################################################################################################################
 
-{
-  
-# read and examine attributes of the Nordeste phylogeny
-#Nordeste.tree <- read.tree("intree.collapsed.dated.thorough.tre")
-#str(Nordeste.tree)
-#attributes(Nordeste.tree)
-#hist(Nordeste.tree$edge.length, breaks=100)
-#summary(Nordeste.tree$edge.length)
-#Nordeste.tree$edge
-#Nordeste.tree$tip.label
-#edgelabels()
-#Nordeste.tree$root.edge
-#node.depth.edgelength(Nordeste.tree)
-#max(node.depth.edgelength(Nordeste.tree))
-#summary(node.depth.edgelength(Nordeste.tree))
-#hist(node.depth.edgelength(Nordeste.tree), breaks=100)
-
-# change two phylogeny tip labels, so that all names are the same in the phylogeny and the brick with the species distribution models
-#Nordeste.tree$tip.label[Nordeste.tree$tip.label == "Antigonon_guatimalense"] <- "Antigonon_guatemalense"
-#Nordeste.tree$tip.label[Nordeste.tree$tip.label == "Stemmadenia_donnellsmithii"] <- "Stemmadenia_donnell-smithii"
-
-# plot the phylogeny
-# first a simple option
-#plot(Nordeste.tree, show.tip.label=FALSE)
-# another version of the plot
-#plot(Nordeste.tree, type="fan", cex=0.2, label.offset = 1,
-#     rotate.tree=196, open.angle=15)
-#axisPhylo(1, cex=1)
-# yet another version of the plot
-#par(mar= c(1, 1, 1, 1) + 0.1))
-#win.graph(20, 20, 10)
-#plot(Nordeste.tree, type="fan", cex=0.2, label.offset = 1,
-#     rotate.tree=196, open.angle=15)
-#axisPhylo(1, cex=1.5)
-#}
 
 ############################################################################################################################
 # 5) Determine the subset of species included in the brick with the species distribution models that are
 # represented in the phylogeny.
 ############################################################################################################################
-
-
-#species.in.analysis <- read.table("04_Wombling/species_in_analysis.txt", header=T, sep=",")
-#class(species.in.analysis)
-#class(species.in.analysis[,1])
-#class(species.in.analysis[,2])
-#dim(species.in.analysis)
-#species.in.analysis[1:5,]
-
-#species.genus <- 
-#  unlist(lapply(strsplit(as.vector(species.in.analysis[,1]), split=c(" "), fixed = T), function(x) paste(x[1], x[2], sep="_")))
-#class(species.genus)
-#species.genus[1:5]
-#length(species.genus)
-
-#create an index to select the species included in the brick that are represented in the phylogeny
-#brick.index.species.in.phylogeny <- which(!is.na(match(species.genus, Nordeste.tree$tip.label)))}
 
 
 ############################################################################################################################
@@ -325,202 +71,34 @@ names(SDM.b)
 # 6.1) Calculate taxonomic (i.e., species-based) beta-diversity using Simpson's and Sorensen's indices
 ############################################################################################################################
 
-brick.index.species.in.phylogeny <- names(SDM.b)
+brick.index.species.in.phylogeny <- as.character(species.in.analysis[,1])
+SDM.b <- brick("04_wombling/SDM_brick.grd")
+brick.index.species.in.phylogeny <- which(names(SDM.b) %in% gsub(" ", "_", brick.index.species.in.phylogeny))
 
-# Obtain, for all pairs of adjacent grid cells, terms to calculate beta-diversity.
-# First, using a matrix indicate:
-# species are unique to one of the grid cells, represented as "0",
-# species unique to the other grid cell, represented as "Inf",
-# and shared species, represented as a "1".
-obs.beta.terms <-  SDM.b[cell.adj[,1]][,brick.index.species.in.phylogeny] / SDM.b[cell.adj[,2]][,brick.index.species.in.phylogeny]
-dim(obs.beta.terms)
+for(x in 107:length(bricks)){
+  SDM.b <- brick(paste("05_Wombling_Null_Models/03_Null_Bricks/Null_", bricks[[x]], "_SDMb.grd", sep=""))
+  
+  writeLines(paste("\nWorking on brick ", x, " of ", length(bricks), sep=""))
+  
+  writeLines("...Calculating beta diversity")
+  source(paste(getwd(), "/01_Scripts/Wombling Modules/01_SIM_and_SOR_diversity.R", sep=""))
 
-# Next, for all pairs of adjacent grid cells, calculate the following terms, see page 254 in
-# Legendre and Legendre (2010, Numerical Ecology, Second Edition):
-# the number of shared species 
-a <- rowSums(obs.beta.terms>0.5 & obs.beta.terms<1.5, na.rm=T)
-summary(a)
-# the number of unique species in one of the grid cells 
-b <- rowSums(obs.beta.terms<0.5, na.rm=T)
-summary(b)
-# the number of unique species in the other grid cell
-c <- rowSums(is.infinite(obs.beta.terms))
-summary(c)
-
-# Calculate ecological distance using Sorensen's index
-# (see page 286, equation 7.56 in Legendre and Legendre (2010, Numerical Ecology, Second Edition):
-obs.beta.sor <- (b+c)/(2*a + b + c)
-obs.beta.sor[which(is.na(obs.beta.sor))] <- 0
-summary(obs.beta.sor)
-
-# Calculate ecological distance using Simpson's index
-# (see page 2230, equation 2 in Mouillot et al. (2013, Journal of Biogeography 40: 2228–2237):
-obs.beta.sim <- pmin(b,c)/(a + pmin(b,c))
-obs.beta.sim[which(is.na(obs.beta.sim))] <- 0
-summary(obs.beta.sim)
-
-# Graphically compare the Sorensen's and Simpson's indexes
-plot(obs.beta.sor, obs.beta.sim, bty="n", cex.axis=1.5, cex.lab=1.5)
-abline(0, 1, col="red")
-
-write.table(obs.beta.sor, file="04_Wombling/ObsBetaSor.txt", sep=",")
-write.table(obs.beta.sim, file="04_Wombling/ObsBetaSim.txt", sep=",")
-
-#read file with beta-diversity measured as taxonomic (i.e., species based) Sorensen's or Simpson's indices
-obs.beta.sor <- read.table("04_Wombling/ObsBetaSor.txt", header=T, sep=",")
-obs.beta.sim <- read.table("04_Wombling/ObsBetaSim.txt", header=T, sep=",")
-dim(obs.beta.sor)
-head(obs.beta.sor)
-obs.beta.sor[1:5,]
-obs.beta.sor <- obs.beta.sor[,1]
-obs.beta.sor[1:10]
-#
-dim(obs.beta.sim)
-head(obs.beta.sim)
-obs.beta.sim[1:5,]
-obs.beta.sim <- obs.beta.sim[,1]
-obs.beta.sim[1:10]
+############################################################################################################################
+# 6.2) Calculate phylogenetic beta-diversity using Simpson's and Sorensen's indices.
+############################################################################################################################
 
 
 ############################################################################################################################
-# 6.2) Calculate phylogenetic beta-diversity using Simpson's and Sorensen's indices
+# 7) Rank the values of the beta-diversity metrics.
 ############################################################################################################################
 
-#{define the species list
-#species.list <- species.genus[brick.index.species.in.phylogeny]
-
-#create vectors needed in the loop to save results
-#obs.phylo.beta.sim <- rep(NA, times=nrow(cell.adj))
-#obs.phylo.beta.sor <- rep(NA, times=nrow(cell.adj))
-
-#for (i in 1: nrow(cell.adj))
-#{
-#  #determine which of the species included in the Nordeste phylogeny occur in the first grid cell
-#  species.1 <- species.list[as.logical(SDM.b.150arc[cell.adj[i,1]][,brick.index.species.in.phylogeny])]
-#  #identify the edges of the Nordeste phylogeny that join the species occurring in the first grid cell to their most recent common ancestor 
-#  edges.1 <- which.edge(Nordeste.tree, species.1)
-#  #determine which of the species included in the Nordeste phylogeny occur in the second grid cell
-#  species.2 <- species.list[as.logical(SDM.b.150arc[cell.adj[i,2]][,brick.index.species.in.phylogeny])]
-#  #determine the edges of the Nordeste phylogeny that join the species occurring in the second grid cell to their most recent common ancestor 
-#  edges.2 <- which.edge(Nordeste.tree, species.2)
-#  #create a list of the species included in the Nordeste phylogeny that occur in one or both of the grid cells,
-#  #avoiding duplication of species names
-#  species.tot <- unique(c(species.1, species.2))
-#  #determine the edges of the Nordeste phylogeny that join the species occurring in one or both of the grid cells to their most recent common ancestor
-#  edges.tot <- which.edge(Nordeste.tree, species.tot)
-#  #Calculate phylogenetic betadiversity, following equations 1-17 in Leprieur et al. (2012, Quantifying phylogenetic beta diversity: distinguishing
-#  #between ‘true’ turnover of lineages and phylogenetic diversity gradients. PLoS ONE 7(8): e42760. doi:10.1371/journal.pone.0042760).
-#  PDtot <- sum(Nordeste.tree$edge.length[unique(c(edges.1, edges.2))])
-#  PD1 <- sum(Nordeste.tree$edge.length[edges.1])
-#  PD2 <- sum(Nordeste.tree$edge.length[edges.2])
-#  a <- PD1+PD2-PDtot
-#  b <- PDtot-PD1
-#  c <- PDtot-PD2
-#  obs.phylo.beta.sim[i] <- min(b,c)/(a+min(b,c))
-#  obs.phylo.beta.sor[i] <- (b+c)/(2*a + b + c)
-#}
-
-#examine results
-#length(obs.phylo.beta.sim)
-#head(obs.phylo.beta.sim)
-#summary(obs.phylo.beta.sim)
-#length(obs.phylo.beta.sor)
-#head(obs.phylo.beta.sor)
-#summary(obs.phylo.beta.sor)
-
-#graphically compare the Sorensen's and Simpson's phylogenetic indexes
-#plot(obs.phylo.beta.sor, obs.phylo.beta.sim, bty="n", cex.axis=1.5, cex.lab=1.5)
-#abline(0, 1, col="red")
-
-#plot(sort(obs.phylo.beta.sim))
-#plot(sort(obs.phylo.beta.sor))
-
-#save file with phylogenetic beta-diversity as Sorensen's index
-#write.table(obs.phylo.beta.sor, file="ObsPhyloBetaSor_BestModels_150arc_2017June19.txt", sep=",")
-
-#read file with phylogenetic beta-diversity as Sorensen's index
-#obs.phylo.beta.sor <- read.table("ObsPhyloBetaSor_BestModels_150arc_2017June19.txt", header=T, sep=",")
-#dim(obs.phylo.beta.sor)
-#head(obs.phylo.beta.sor)
-#obs.phylo.beta.sor[1:5,]
-#obs.phylo.beta.sor <- obs.phylo.beta.sor[,1]
-#obs.phylo.beta.sor[1:10]
-
-#save file with phylogenetic beta-diversity as Simpson's index
-#write.table(obs.phylo.beta.sim, file="ObsPhyloBetaSim_BestModels_150arc_2017June19.txt", sep=",")
-
-#read file with phylogenetic beta-diversity as Simpson's index
-#obs.phylo.beta.sim <- read.table("ObsPhyloBetaSim_BestModels_150arc_2017June19.txt", header=T, sep=",")
-#dim(obs.phylo.beta.sim)
-#head(obs.phylo.beta.sim)
-#obs.phylo.beta.sim[1:5,]
-#obs.phylo.beta.sim <- obs.phylo.beta.sim[,1]
-#obs.phylo.beta.sim[1:10]
-#}
-
-############################################################################################################################
-# 7) Define the beta-diversity metric to use in subsequent analyses. At this
-# point there are four metrics available: taxonomic and phylogenetic versions of
-# Sorensen's and Simpson's indexes.
-############################################################################################################################
-
-#obs.beta <- obs.beta.sor
-obs.beta <- obs.beta.sim
-#obs.beta <- obs.phylo.beta.sor
-#obs.beta <- obs.phylo.beta.sim
+  writeLines("...Ranking beta diversity values")
+  source(paste(getwd(), "/01_Scripts/Wombling Modules/02_rank_SIM_and_SOR_diversity.R", sep=""))
+  
+}
+  
 
 
-############################################################################################################################
-# 8) Rank the values of the chosen beta-diversity metric. Note that the
-# ranking involves random resolution of ties. Therefore, to ensure exact
-# replication of results, you might want to skip to the end of this section
-# and gather a previously created file with the ranks of beta-diversity values. 
-############################################################################################################################
-
-r.obs.beta <- rank(obs.beta, ties.method="random")
-class(r.obs.beta)
-length(r.obs.beta)
-summary(r.obs.beta, digits=6)
-max(r.obs.beta)
-length(unique(r.obs.beta))
-r.obs.beta[1:100]
-
-#define the percentiles of beta-diversity that will be evaluated against the null model
-beta.ranks.to.evaluate <- 35082 - round(35082*seq(0.05, 0.5, 0.05))
-
-plot(r.obs.beta, obs.beta, bty="n", cex.axis=1.5, cex.lab=1.5)
-abline(v= beta.ranks.to.evaluate, lty=3)
-abline(h= obs.beta[match(beta.ranks.to.evaluate, r.obs.beta)], lty=3)
-#
-plot(r.obs.beta, obs.beta, bty="n", cex.axis=1.5, cex.lab=1.5, xlim=c(6000,35082), ylim=c(0,0.1))
-abline(v= beta.ranks.to.evaluate, lty=3)
-abline(h= obs.beta[match(beta.ranks.to.evaluate, r.obs.beta)], lty=3)
-
-#save ranks of observed beta values: useful because the raking has a random
-#component to deal with ties, thus fully consistent results are unlikely
-#using different iterations of the ranking
-#write.table(r.obs.beta, file="04_Wombling/Rank_ObsBetaSor.txt", row.names=F)
-write.table(r.obs.beta, file="04_Wombling/Rank_ObsBetaSim.txt", row.names=F)
-#write.table(r.obs.beta, file="04_Wombling/Rank_ObsPhyBetaSor.txt", row.names=F)
-#write.table(r.obs.beta, file="04_Wombling/Rank_ObsPhyBetaSim.txt", row.names=F)
-
-#read ranks of observed beta values
-#r.obs.beta <- read.table("Rank_ObsBetaSor_BestModels.txt", header=T, sep=",")
-r.obs.beta <- read.table("04_Wombling/Rank_ObsBetaSim.txt", header=T, sep=",")
-#r.obs.beta <- read.table("Rank_ObsPhyBetaSor_BestModels.txt", header=T, sep=",")
-#r.obs.beta <- read.table("Rank_ObsPhyBetaSim_BestModels.txt", header=T, sep=",")
-class(r.obs.beta)
-class(r.obs.beta[,1])
-r.obs.beta[1:100,1]
-dim(r.obs.beta)
-head(r.obs.beta)
-r.obs.beta <- as.numeric(r.obs.beta[,1])
-class(r.obs.beta)
-length(r.obs.beta)
-summary(r.obs.beta, digits=6)
-max(r.obs.beta)
-length(unique(r.obs.beta))
-r.obs.beta[1:100]
 
 
 ############################################################################################################################

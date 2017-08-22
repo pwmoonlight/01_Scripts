@@ -63,7 +63,7 @@ plot(c(1,200), c(1,100), type="n", bty="n", xlab="Time (hours)", ylab= "Null mod
 
 ptm <- Sys.time()
 
-dir.create("05_Wombling_Null_Models/02_Null_Distributions", showWarnings = F)
+dir.create("05_Wombling_Null_Models/02b_Null_Distributions", showWarnings = F)
 dir.create("05_Wombling_Null_Models/03_Null_Bricks", showWarnings = F)
 
 for(null.iterations in 1:iterations.to.perform)
@@ -186,14 +186,14 @@ for(null.iterations in 1:iterations.to.perform)
 		rm(AOO.fraction.to.add)
 
     # Save the NULL species raster
-		writeRaster(occurrences.r, filename=paste("05_Wombling_Null_Models/02_Null_Distributions/", names(SDM.b)[h], "_NULL.grd", sep=""))
+		writeRaster(occurrences.r, filename=paste("05_Wombling_Null_Models/02b_Null_Distributions/", names(SDM.b)[h], "_NULL.grd", sep=""))
 		rm(occurrences.r)
 	}
 
 	#create an R object of class "brick" with species distribution models for all species,
 	#first create a list of the names of raster objects (with species distribution models)
 	#that will be included in the "brick":
-	SDM.raster.names <- list.files("05_Wombling_Null_Models/02_Null_Distributions", pattern="*.grd", full.names = T)
+	SDM.raster.names <- list.files("05_Wombling_Null_Models/02b_Null_Distributions", pattern="*.grd", full.names = T)
 
 	#create the null "brick"
 	Null_SDM.b <- brick(lapply(SDM.raster.names, eval))
@@ -206,7 +206,7 @@ for(null.iterations in 1:iterations.to.perform)
 	removeTmpFiles(0) #remove temporary files
 
 	# Delete the individual species rasters to save disk space
-	file.remove(list.files("05_Wombling_Null_Models/02_Null_Distributions/", full.names = T))
+	file.remove(list.files("05_Wombling_Null_Models/02b_Null_Distributions/", full.names = T))
 
 	#save file with vector "final.j", which stores the number of attempts needed to rotate the centroids of each species
 	write.table(final.j, file = paste("05_Wombling_Null_Models/Null_", random.number, "_", format(Sys.time(), "%d%b%Y_%H%M%S"), "_final_j", sep=""), quote = TRUE, sep = ",")
@@ -216,17 +216,3 @@ for(null.iterations in 1:iterations.to.perform)
 }
 
 Sys.time() - ptm
-
-############################################################################################################################
-# 4)
-############################################################################################################################
-
-#read the file that has the brick with the species distribution models of all species
-#setwd("C:/_transfer/Papers/Nicaragua_Biomes/Models/All_species_in_a_brick_BestModels") #from Ivan's laptop
-#setwd("J:/Jimenez/Nicaragua_Biomes/Models/All_species_in_a_brick_BestModels") #from desktop 1ZTF at the Lehmann
-#dir()
-#SDM.b <- brick("SDMb_2015Oct6.grd")
-#SDM.b
-#nlayers(SDM.b)
-#names(SDM.b)
-
