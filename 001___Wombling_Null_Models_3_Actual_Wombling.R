@@ -159,28 +159,6 @@ for(x in 1:length(bricks)){
   write.csv(number.of.subgraphs.sor, file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor_number_of_subgraphs.csv", sep=""))
 }
 
-#examine the number of regions (potential ecoregions or subgraphs) to evaluate against null models
-number.of.subgraphs[35082 - beta.ranks.to.evaluate]
-
-#save file with number of subgraphs, derived from the taxonomic (i.e, species based) or phylogenetic
-#versions of Sorensen's or Simpson's indices
-write.table(number.of.subgraphs, file="04_Wombling/NumberSubgraphsSim.txt", sep=",", row.names=F)
-#write.table(number.of.subgraphs, file="04_Wombling/NumberSubgraphsSor.txt", sep=",", row.names=F)
-#write.table(number.of.subgraphs, file="NumberSubgraphsPhyloSor.txt", sep=",", row.names=F)
-#write.table(number.of.subgraphs, file="NumberSubgraphsPhyloSims.txt", sep=",", row.names=F)
-
-#read file with number of subgraphs, derived from Sorensen's index
-#number.of.subgraphs <- read.table("NumberSubgraphsSor.txt", header=T, sep=",")
-number.of.subgraphs <- read.table("04_Wombling/NumberSubgraphsSim.txt", header=T, sep=",")
-#number.of.subgraphs <- read.table("NumberSubgraphsPhyloSor.txt", header=T, sep=",")
-#number.of.subgraphs <- read.table("NumberSubgraphsPhyloSim.txt", header=T, sep=",")
-head(number.of.subgraphs)
-number.of.subgraphs <- number.of.subgraphs[,1]
-number.of.subgraphs[1:5]
-class(number.of.subgraphs)
-length(number.of.subgraphs)
-summary(number.of.subgraphs)
-number.of.subgraphs[1:100]
 
 
 ##################################################################################################
@@ -194,202 +172,42 @@ number.of.subgraphs[1:100]
 #if you have not done so in section 8 (above)
 beta.ranks.to.evaluate <- 35082 - round(35082*seq(0.05, 0.5, 0.05))
 
-#define the number of regions (potentially ecoregions or "subgraphs") for which superfluity will be calculated
-evaluation.number.of.subgraphs <- number.of.subgraphs[35082 - beta.ranks.to.evaluate]
+number.of.subgraphs.sim <- read.csv("04_Wombling/NumberSubgraphsSim.txt")
+number.of.subgraphs.sor <- read.csv("04_Wombling/NumberSubgraphsSor.txt")
+evaluation.number.of.subgraphs.sim <- read.csv("04_Wombling/SuperfluitySim.txt")[,2]
+evaluation.number.of.subgraphs.sor <- read.csv("04_Wombling/SuperfluitySor.txt")[,2]
 
-#check that all evaluation points exist in the vector "number.of.subgraphs"
-match(evaluation.number.of.subgraphs, number.of.subgraphs)  
-sum(is.na(match(evaluation.number.of.subgraphs, number.of.subgraphs)))
 
-#calculate superfluity
-start.time <- Sys.time()
-superfluity <- rep(NA, times=length(evaluation.number.of.subgraphs))
-plot(min(evaluation.number.of.subgraphs), 0,
-     xlim=c(min(evaluation.number.of.subgraphs), max(evaluation.number.of.subgraphs)),
-     ylim=c(0, 200), 
-     bty="n", xlab="Regions (or subgraphs)", ylab="Superfluity", cex.lab=1.5, cex.axis=1.5, type="n")
-for (j in evaluation.number.of.subgraphs)
-{
-  print(paste(which(evaluation.number.of.subgraphs == j), "of", length(evaluation.number.of.subgraphs)))
-  candidate.boundary.elements.to.delete <- which(r.obs.beta > (length(r.obs.beta) - match(j, number.of.subgraphs)))
-  focal.graph <- delete_edges(Nordeste.graph, candidate.boundary.elements.to.delete)
-  #focal.graph
+for(x in 1:length(bricks)){
+  null.number.of.subgraphs.sim <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim_number_of_subgraphs.csv", sep=""))
+  null.number.of.subgraphs.sor <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor_number_of_subgraphs.csv", sep=""))
+
+  null.r.obs.beta.sim <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim_ranked.csv", sep=""))
+  null.r.obs.beta.sor <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor_ranked.csv", sep=""))
   
-  necessary.edge <- rep(NA, times=length(candidate.boundary.elements.to.delete))
-  for(i in 1:length(candidate.boundary.elements.to.delete))
-  {
-    necessary.edge[i] <- ifelse(components(add_edges(focal.graph, cell.adj.char[candidate.boundary.elements.to.delete[i],]))$no < components(focal.graph)$no, 1, 0)
+  null.superfluidity.sim <- rep(NA, times=length(evaluation.number.of.subgraphs))
+  null.superfluidity.sor <- rep(NA, times=length(evaluation.number.of.subgraphs))
+  
+  for(j in 1:length(evaluation.number.of.subgraphs.sim)){
+    print(paste(j, "of", length(evaluation.number.of.subgraphs), "at", Sys.time()))
+    candidate.boundary.elements.to.delete.sim <- which(null.r.obs.beta.sim > (length(null.r.obs.beta.sim) - match(evaluation.number.of.subgraphs.sim[[j]], null.number.of.subgraphs.sim)))
+    candidate.boundary.elements.to.delete.sor <- which(null.r.obs.beta.sor > (length(null.r.obs.beta.sor) - match(evaluation.number.of.subgraphs.sor[[j]], null.number.of.subgraphs.sor)))
+    
+    focal.graph.sim <- delete_edges(Nordeste.graph, candidate.boundary.elements.to.delete.sim)
+    focal.graph.sor <- delete_edges(Nordeste.graph, candidate.boundary.elements.to.delete.sor)
+    
+    necessary.edge.sim <- rep(NA, times=length(candidate.boundary.elements.to.delete.sim))
+    for(i in 1:length(candidate.boundary.elements.to.delete))
+    {
+      necessary.edge.sim[i] <- ifelse(components(add_edges(focal.graph.sim, cell.adj.char[candidate.boundary.elements.to.delete.sim[i],]))$no < components(focal.graph.sim)$no, 1, 0)
+    }
+    necessary.edge.sor <- rep(NA, times=length(candidate.boundary.elements.to.delete.sor))
+    {
+      necessary.edge.sor[i] <- ifelse(components(add_edges(focal.graph.sor, cell.adj.char[candidate.boundary.elements.to.delete.sor[i],]))$no < components(focal.graph.sor)$no, 1, 0)
+    }
+    null.superfluity.sim[j] <- sum(necessary.edge.sim<1)/sum(necessary.edge.sim>0)
+    null.superfluity.sor[j] <- sum(necessary.edge.sor<1)/sum(necessary.edge.sor>0)
   }
-  superfluity[which(evaluation.number.of.subgraphs==j)] <- sum(necessary.edge<1)/sum(necessary.edge>0)
-  points(j, superfluity[which(evaluation.number.of.subgraphs==j)], pch=19)
+  write.csv(cbind(evaluation.number.of.subgraphs.sim, null.superfluity.sim), file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/superfluidity_sim.csv", sep=""))
+  write.csv(cbind(evaluation.number.of.subgraphs.sor, null.superfluity.sor), file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/superfluidity_sor.csv", sep=""))
 }
-difftime(Sys.time(), start.time, units="mins")
-#this procedure might take about 14 minutes, depending on which computer is used
-#
-#examine the results
-class(superfluity)
-length(superfluity)
-summary(superfluity)
-
-#plot the results in linear scale
-plot(evaluation.number.of.subgraphs, superfluity, pch=19,
-     bty="n", cex.axis=1.5, cex.lab=1.5, type="o",
-     xlab="Regions (or subgraphs)", ylab="Superfluity")
-
-#plot the results using a semi-log graph
-plot(evaluation.number.of.subgraphs, log(superfluity), pch=19,
-     bty="n", cex.axis=1.5, cex.lab=1.5, type="o",
-     xlab="Regions (or subgraphs)", ylab="Log (Superfluity)")
-
-#plot the results using a log-log graph
-plot(log(evaluation.number.of.subgraphs), log(superfluity), pch=19,
-     bty="n", cex.axis=1.5, cex.lab=1.5, type="o",
-     xlab="Log (Regions (or subgraphs))", ylab="Log (Superfluity)")
-
-#write files with superfluity values, derived from the taxonomic (i.e., species based) or phylogenetic
-#versions of Sorensen's or Simpson's indices
-#write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluitySor.txt", sep=",", row.names=F)
-#write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluityPhyloSor.txt", sep=",", row.names=F)
-write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluitySim.txt", sep=",", row.names=F)
-#write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluityPhyloSim.txt", sep=",", row.names=F)
-
-#read file with superfluity values, dderived from the taxonomic (i.e., species based) or phylogenetic
-#versions of Sorensen's or Simpson's indices
-#superfluity <- read.table("04_Wombling/SuperfluitySor.txt", header=T, sep=",")
-#superfluity <- read.table("04_Wombling/SuperfluityPhyloSor.txt", header=T, sep=",")
-#superfluity <- read.table("04_Wombling/SuperfluitySim.txt", header=T, sep=",")
-#superfluity <- read.table("04_Wombling/SuperfluityPhyloSim.txt", header=T, sep=",")
-head(superfluity)
-class(superfluity)
-length(superfluity)
-summary(superfluity)
-evaluation.number.of.subgraphs <- superfluity[,1]
-superfluity <- superfluity[,2]
-
-
-##################################################################################################
-# 12) Examine and map the regions (potential ecoregions) or "subgraphs" obtained in section 10
-##################################################################################################
-
-##################################################################################################
-# 12.1) Obtain and examine data on the regions
-##################################################################################################
-
-#select the number of regions (potential ecoregions) or subgraphs to map
-number.of.subgraphs[35082 - beta.ranks.to.evaluate]
-pick.num.subgraphs <- 4147
-#make sure that the number you selected exists in the vector talling the number of subgraphs
-match(pick.num.subgraphs, number.of.subgraphs)
-
-#define the spatial links that should be removed to obtain the desired number of regions or subgraphs
-candidate.boundary.elements.to.deploy <- which(r.obs.beta > (length(r.obs.beta) - match(pick.num.subgraphs, number.of.subgraphs)))
-
-#remove the spatial links defined in the previous line of code and examine the results
-modified.Nordeste.graph <- delete_edges(Nordeste.graph, candidate.boundary.elements.to.deploy)
-components(modified.Nordeste.graph)$no
-modified.Nordeste.graph
-Nordeste.graph
-
-#examine the resulting distribution of region size (or subgraph size)
-SizeRegions <- components(modified.Nordeste.graph)$csize
-histogram.subgraph.size <- hist(SizeRegions, breaks=seq(0.5,max(components(modified.Nordeste.graph)$csize)+0.5,1))
-attributes(histogram.subgraph.size)
-plot(histogram.subgraph.size$mids, histogram.subgraph.size$counts+1, 
-     yaxt="n", log="xy", bty="n", type="h", pch=19, cex.axis=1.5, cex.lab=1.5,
-     xlab="Region size (grid cells)", ylab="Regions", main=paste("Highest 50% CBE deployed (154188),", "total regions = ", pick.num.subgraphs))
-axis(2, at=c(1,1+10^seq(0,4,1)), labels=c(0,10^seq(0,4,1)), cex.axis=1.5)
-axis(2, at=c(2), labels=c(1), cex.axis=1.5)
-
-#save file with region size
-save(SizeRegions, file=paste("04_Wombling/SizeRegions", pick.num.subgraphs, ".R", sep=""))
-#load file with region size
-load(paste("04_Wombling/SizeRegions", pick.num.subgraphs, ".R", sep=""))
-
-#obtain the coordinates of the center of the cells assigned to each region or subgraph
-comp.coor <-  as.list (rep(NA, times=components(modified.Nordeste.graph)$no))
-for(j in 1:components(modified.Nordeste.graph)$no)
-{
-  comp.coor[[j]] <- xyFromCell(Nordeste.mask.0, as.numeric(names(components(modified.Nordeste.graph)$membership))[components(modified.Nordeste.graph)$membership==j], spatial=FALSE)
-}
-
-#save the coordinates of the center of the cells in each region or subgraph
-save(comp.coor, file=paste("04_Wombling/CompCoor_", pick.num.subgraphs, ".R", sep=""))
-
-#load the coordinates of the center of the cells in each region or subgraph
-load(paste("04_Wombling/CompCoor_", pick.num.subgraphs, ".R", sep=""))
-
-#obtain cell number (or cell id) for each cell assigned to each region or subgraph
-comp.cells <-  as.list (rep(NA, times=components(modified.Nordeste.graph)$no))
-for(j in 1:components(modified.Nordeste.graph)$no)
-{
-  comp.cells[[j]] <- as.numeric(names(components(modified.Nordeste.graph)$membership))[components(modified.Nordeste.graph)$membership==j]
-}
-
-#create a raster of regions or subgraphs
-Nordeste.mask.Regions <- Nordeste.mask.0
-Nordeste.mask.Regions[] <- NA
-Nordeste.mask.Regions[unlist(comp.cells)] <- rep(1:length(comp.cells), times=lapply(comp.cells, length))
-Nordeste.mask.Regions
-summary(Nordeste.mask.Regions)
-
-#save the raster of regions or subgraphs
-writeRaster(Nordeste.mask.Regions, paste("04_Wombling/Nordeste_, pick.num.subgraphs,"_Regions.grd", sep="))
-
-##################################################################################################
-# 12.2) Map the regions
-##################################################################################################
-
-#define and examine colors to map regions
-number.of.colors <- 4147
-subgraph.col <- colorRampPalette(brewer.pal(12,"Paired"))(number.of.colors)
-subgraph.col <- sample(subgraph.col, length(subgraph.col))
-subgraph.col[1:20]
-plot(1:number.of.colors, col = subgraph.col, pch = 16, cex = 3)
-length(subgraph.col)
-subgraph.col <- rep(subgraph.col, length.out=pick.num.subgraphs)
-
-#draw the map of regions at broad scale
-plot(Nordeste.mask.Regions)
-plot(Nordeste.mask.Regions, col=subgraph.col)
-#plot regions, broad scale
-plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F)
-#plot regions, narrower scale
-plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-12,10))
-plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-25,-12))
-plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-12,10))
-plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-25,-12))
-
-#plot the mask, broad scale
-plot(Nordeste.mask.0, col="white", useRaster=T, legend=F)
-#plot the mask, narrower scale
-plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-12,10))
-plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-25,-12))
-plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-12,10))
-plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-25,-12))
-#plot the mask, even narrower scale
-
-#create a matrix with the species composition for each region
-SpeciesRegions <- matrix(NA, nrow=pick.num.subgraphs, ncol=length(brick.index.species.in.phylogeny))
-for(i in 1:length(brick.index.species.in.phylogeny))
-{
-  SpeciesRegions[,i] <- zonal(raster(SDM.b, layer=brick.index.species.in.phylogeny[i]), Nordeste.mask.Regions, fun='sum', digits=0, na.rm=TRUE)[,2] 
-}
-#examine resulting matrix
-SpeciesRegions[1:5,1:5]
-dim(SpeciesRegions)
-#convert the matrix data to logical (true/false) data
-SpeciesRegions <- SpeciesRegions > 0
-colnames(SpeciesRegions) <- species.genus[]
-SpeciesRegions[SpeciesRegions==T] <- 1
-#examine the results
-SpeciesRegions[1:5,1:5]
-dim(SpeciesRegions)
-
-#save files with species composition of for each region
-write.table(SpeciesRegions, "04_Wombling/SpeciesRegions", pick.num.subgraphs, ".txt", quote=T, sep=",")
-write.table(SizeRegions, "04_Wombling/SizeRegions", pick.num.subgraphs, ".txt", quote=T, sep=",")
-
-#read files with species composition of for each region
-SpeciesRegions <- read.table("04_Wombling/SpeciesRegions", pick.num.subgraphs, ".txt", header=T, sep=",")
-head(SpeciesRegions)
-dim(SpeciesRegions)
