@@ -31,6 +31,7 @@ library(RColorBrewer)
 
 #create and plot the Nordeste raster mask that indicates the grid cells that have climate data,
 Nordeste.mask.0 <- raster("000_GIS_LAYERS/nordeste.tif")
+no.na.cells <- (1:ncell(Nordeste.mask.0))[!is.na(extract(Nordeste.mask.0, 1:ncell(Nordeste.mask.0)))]
 
 ############################################################################################################################
 # 2.3) Read in the adjacent grid cells  
@@ -97,78 +98,11 @@ for(x in 107:length(bricks)){
   
 }
   
-
-
-
-
 ############################################################################################################################
 # 9) Map beta-diversity values for the spatial links created in section 2 (above).
 # You may choose an "animated" loop (section 7.1 below) that displays increasingly lower values of beta-diversity,
 # or "static" mapping (section 7.2 below) wherby a single set of high beta-diversity values is displayed.
 ############################################################################################################################
-
-#If you haven't, go to section 2 and read (or create) the Nordeste raster mask that has a resolution of 5*30 = 150 arc seconds,
-#which is 2.5 minutes or 0.04166667 X 0.04166667 degrees. That raster mask should be named "Nordeste.mask.0".
-
-############################################################################################################################
-# 9.1) Map beta-diversity values using an "animated" loop that displays increasingly lower values of beta-diversity.
-############################################################################################################################
-
-#plot the mask, broad scale
-plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F)
-
-selected.quantile <- seq(0.95, 0.5, -0.05)
-quantile(obs.beta, probs=selected.quantile[1])
-values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta, probs=selected.quantile[1]))
-values.at.above.quantile
-
-flag.candidate.boundary.elements <- r.obs.beta > (length(r.obs.beta)-values.at.above.quantile)
-sum(flag.candidate.boundary.elements)
-
-for(i in 1:length(selected.quantile))
-{
-  values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta, probs=selected.quantile[i]))
-  flag.candidate.boundary.elements <- r.obs.beta > (length(r.obs.beta)-values.at.above.quantile)
-
-  from.coor <- xyFromCell(Nordeste.mask.0, cell.adj[flag.candidate.boundary.elements,1], spatial=FALSE)
-  to.coor <- xyFromCell(Nordeste.mask.0, cell.adj[flag.candidate.boundary.elements,2], spatial=FALSE)
-  arrows(from.coor[,1], from.coor[,2], to.coor[,1], to.coor[,2], length = 0, code = 2, col="red")
-  legend("topright", paste("Quantile =", selected.quantile[i]), bty="o", bg="white", box.col="white")
-  Sys.sleep(1)
-}
-
-#remove matrices with grid cell coordinates: they may be large and thus occupy significant space, are not
-#needed after this section, and are easily re-created as needed.
-rm(from.coor, to.coor, flag.candidate.boundary.elements)
-
-############################################################################################################################
-# 9.2) Map beta-diversity values using a "static" map to display a single set of high beta-diversity values.
-############################################################################################################################
-
-#plot the mask, broad scale
-plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F)
-#plot the mask, narrower scale
-plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F, xlim=c(-87,-85), ylim=c(13,15))
-plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F, xlim=c(-87,-85), ylim=c(11,13))
-plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(10.5,13))
-plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(13,15.5))
-
-selected.quantile <- 0.99
-quantile(obs.beta, probs=selected.quantile)
-values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta, probs=selected.quantile))
-values.at.above.quantile
-
-flag.candidate.boundary.elements <- r.obs.beta > (length(r.obs.beta)-values.at.above.quantile)
-sum(flag.candidate.boundary.elements)
-
-from.coor <- xyFromCell(Nordeste.mask.0, cell.adj[flag.candidate.boundary.elements,1], spatial=FALSE)
-to.coor <- xyFromCell(Nordeste.mask.0, cell.adj[flag.candidate.boundary.elements,2], spatial=FALSE)
-arrows(from.coor[,1], from.coor[,2], to.coor[,1], to.coor[,2], length = 0, code = 2, col="red")
-legend("topright", paste("Quantile =", selected.quantile), bty="o", bg="white", box.col="white")
-
-#remove matrices with grid cell coordinates: they may be large and thus occupy significant space, are not
-#needed after this section, and are easily re-created as needed.
-rm(from.coor, to.coor, flag.candidate.boundary.elements)
 
 
 ############################################################################################################################
@@ -184,83 +118,46 @@ rm(from.coor, to.coor, flag.candidate.boundary.elements)
 #in which the "vertices" (or "vertexes") are grid cells, and the "edges"
 #are spatial links between adjacent grid cells as defined in section 2.
 #
-#first create a matrix defining the edges:
-as.matrix(cell.adj)[1:5,]
-length(unique(c(cell.adj[,1], cell.adj[,2])))
-length(no.na.cells)
-cell.adj.char <- cbind(as.character(cell.adj[,1]), as.character(cell.adj[,2]))
-cell.adj.char[1:5,]
-dim(cell.adj.char)
-#
-#next define the graph and examine the result
-Nordeste.graph <- graph_from_edgelist(cell.adj.char, directed = F)
-Nordeste.graph
-class(Nordeste.graph)
-components(Nordeste.graph)$membership[1:100]
-components(Nordeste.graph)$csize
-components(Nordeste.graph)$no
-length(components(Nordeste.graph)$membership)
-length(V(Nordeste.graph))
-length(unique(c(cell.adj[,1], cell.adj[,2])))
-length(no.na.cells)
-length(no.na.cells) - length(V(Nordeste.graph))
-length(components(Nordeste.graph)$csize)
-components(Nordeste.graph)$no
-is.connected(Nordeste.graph)
 
+for(x in 1:length(bricks)){
+  SDM.b <- brick(paste("05_Wombling_Null_Models/03_Null_Bricks/Null_", bricks[[x]], "_SDMb.grd", sep=""))
+  writeLines(paste("\nWorking on brick ", x, " of ", length(bricks), sep=""))
+  
+#read in the beta diversity measures
+  obs.beta.sim <- read.table(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim.csv", sep=""), sep=",", header=T)[,2]
+  obs.beta.sor <- read.table(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor.csv", sep=""), sep=",", header=T)[,2]
+  r.obs.beta.sim <- read.table(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim_ranked.csv", sep=""), sep=",", header=T)[,2]
+  r.obs.beta.sor <- read.table(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor_ranked.csv", sep=""), sep=",", header=T)[,2]
+  
+#first create a matrix defining the edges:
+  cell.adj.char <- cbind(as.character(cell.adj[,1]), as.character(cell.adj[,2]))
+  #
+#next define the graph
+  Nordeste.graph.sim <- graph_from_edgelist(cell.adj.char, directed = F)
+  Nordeste.graph.sor <- graph_from_edgelist(cell.adj.char, directed = F)
+  
 #run a loop to sequentially remove spatial links and count the resulting number
 #of subgraphs, which correspond to isolated regions (and potentially ecoregions).
-number.of.subgraphs <- rep(NA, times=length(obs.beta))
-plot(0, components(Nordeste.graph)$no, 
-     xlim=c(0, sum(obs.beta >= quantile(obs.beta, probs=0))),
-     ylim=c(15,50000),
-     xlab="Candidate boundary elements deployed", ylab="Regions (or subgraphs)",
-     pch=19, bty="n", cex.axis=1.5, cex.lab=1.5) 
-#
-start.time <- Sys.time()
-# 
-for(i in 1:length(obs.beta))
-{
-  print(i/35082*100)
-  candidate.boundary.elements.to.deploy <- which(r.obs.beta > (length(r.obs.beta)-i))
-  number.of.subgraphs[i] <- components(delete_edges(Nordeste.graph, candidate.boundary.elements.to.deploy))$no
-  points(i, number.of.subgraphs[i], pch=19)
+  number.of.subgraphs.sim <- rep(NA, times=length(obs.beta.sim))
+  number.of.subgraphs.sor <- rep(NA, times=length(obs.beta.sor))
+  #
+  start.time <- Sys.time()
+  # 
+  for(i in 1:length(obs.beta.sim))
+  {
+    percents <- round(length(obs.beta.sim)*seq(1, 0, -0.05))
+    if(i %in% percents){
+      writeLines(paste("... ", round(i/length(obs.beta.sim)*100, 0), "% at ", Sys.time(), sep=""))
+    }
+    candidate.boundary.elements.to.deploy.sim <- which(r.obs.beta.sim > (length(r.obs.beta.sim)-i))
+    candidate.boundary.elements.to.deploy.sor <- which(r.obs.beta.sor > (length(r.obs.beta.sor)-i))
+    number.of.subgraphs.sim[i] <- components(delete_edges(Nordeste.graph.sim, candidate.boundary.elements.to.deploy.sim))$no
+    number.of.subgraphs.sor[i] <- components(delete_edges(Nordeste.graph.sor, candidate.boundary.elements.to.deploy.sor))$no
+  }
+  
+  write.csv(number.of.subgraphs.sim, file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim_number_of_subgraphs.csv", sep=""))
+  write.csv(number.of.subgraphs.sor, file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor_number_of_subgraphs.csv", sep=""))
 }
-difftime(Sys.time(), start.time, units="mins")
-#this procedure might take about 1 or 2 minutes, depending on which computer is used
-#
-#examine the results
-class(number.of.subgraphs)
-length(number.of.subgraphs)
-summary(number.of.subgraphs)
-number.of.subgraphs[1:100]
-
-#plot the number of subgraphs (potential ecoregions) against the
-#number of spatial links removed (or "candidate boundary elements" deployed).
-plot(1:length(number.of.subgraphs), number.of.subgraphs,
-     xlab="Candidate boundary elements deployed", ylab="Regions (or subgraphs)",
-     pch=19, bty="n", cex.axis=1.5, cex.lab=1.5) 
-abline(v=match(16, number.of.subgraphs), lty=3)
-abline(h=16, lty=3)
-abline(v=match(50000, number.of.subgraphs), lty=3)
-abline(h=50000, lty=3)
-abline(v=30829, lty=3)
-abline(v=number.of.subgraphs[30829], col="red")
-abline(v=35082 - beta.ranks.to.evaluate, lty=3)
-abline(h=number.of.subgraphs[35082 - beta.ranks.to.evaluate], lty=3)
-
-plot(1:length(number.of.subgraphs), number.of.subgraphs, xlim=c(0,6385), ylim=c(0,1600),
-     xlab="Candidate boundary elements deployed", ylab="Regions (or subgraphs)",
-     pch=19, bty="n", cex.axis=1.5, cex.lab=1.5) 
-abline(v=35082 - beta.ranks.to.evaluate, lty=3)
-abline(h=number.of.subgraphs[35082 - beta.ranks.to.evaluate], lty=3)
-
-plot(1:length(number.of.subgraphs), number.of.subgraphs, xlim=c(400, 800), ylim=c(0,20),
-     xlab="Candidate boundary elements deployed", ylab="Regions (or subgraphs)",
-     pch=19, bty="n", cex.axis=1.5, cex.lab=1.5) 
-abline(v=35082 - beta.ranks.to.evaluate, lty=3)
-abline(v=match(pick.num.subgraphs, number.of.subgraphs), lty=3)
-abline(h=number.of.subgraphs[35082 - beta.ranks.to.evaluate], lty=3)
 
 #examine the number of regions (potential ecoregions or subgraphs) to evaluate against null models
 number.of.subgraphs[35082 - beta.ranks.to.evaluate]
