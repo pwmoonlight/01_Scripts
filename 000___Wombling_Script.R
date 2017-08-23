@@ -805,7 +805,7 @@ superfluity <- superfluity[,2]
 
 #select the number of regions (potential ecoregions) or subgraphs to map
 number.of.subgraphs[35082 - beta.ranks.to.evaluate]
-pick.num.subgraphs <- 4147
+pick.num.subgraphs <- 5857
 #make sure that the number you selected exists in the vector talling the number of subgraphs
 match(pick.num.subgraphs, number.of.subgraphs)
 
@@ -829,9 +829,11 @@ axis(2, at=c(1,1+10^seq(0,4,1)), labels=c(0,10^seq(0,4,1)), cex.axis=1.5)
 axis(2, at=c(2), labels=c(1), cex.axis=1.5)
 
 #save file with region size
-save(SizeRegions, file=paste("04_Wombling/SizeRegions", pick.num.subgraphs, ".R", sep=""))
+save(SizeRegions, file=paste("04_Wombling/SizeRegions_SIM_", pick.num.subgraphs, ".R", sep=""))
+save(SizeRegions, file=paste("04_Wombling/SizeRegions_SOR_", pick.num.subgraphs, ".R", sep=""))
 #load file with region size
-load(paste("04_Wombling/SizeRegions", pick.num.subgraphs, ".R", sep=""))
+load(paste("04_Wombling/SizeRegions_SIM_", pick.num.subgraphs, ".R", sep=""))
+load(paste("04_Wombling/SizeRegions_SOR_", pick.num.subgraphs, ".R", sep=""))
 
 #obtain the coordinates of the center of the cells assigned to each region or subgraph
 comp.coor <-  as.list (rep(NA, times=components(modified.Nordeste.graph)$no))
@@ -841,10 +843,12 @@ for(j in 1:components(modified.Nordeste.graph)$no)
 }
 
 #save the coordinates of the center of the cells in each region or subgraph
-save(comp.coor, file=paste("04_Wombling/CompCoor_", pick.num.subgraphs, ".R", sep=""))
+save(comp.coor, file=paste("04_Wombling/CompCoor_SIM_", pick.num.subgraphs, ".R", sep=""))
+save(comp.coor, file=paste("04_Wombling/CompCoor_SOR_", pick.num.subgraphs, ".R", sep=""))
 
 #load the coordinates of the center of the cells in each region or subgraph
-load(paste("04_Wombling/CompCoor_", pick.num.subgraphs, ".R", sep=""))
+load(paste("04_Wombling/CompCoor_SIM_", pick.num.subgraphs, ".R", sep=""))
+load(paste("04_Wombling/CompCoor_SOR_", pick.num.subgraphs, ".R", sep=""))
 
 #obtain cell number (or cell id) for each cell assigned to each region or subgraph
 comp.cells <-  as.list (rep(NA, times=components(modified.Nordeste.graph)$no))
@@ -861,14 +865,15 @@ Nordeste.mask.Regions
 summary(Nordeste.mask.Regions)
 
 #save the raster of regions or subgraphs
-writeRaster(Nordeste.mask.Regions, paste("04_Wombling/Nordeste_, pick.num.subgraphs,"_Regions.grd", sep="))
+writeRaster(Nordeste.mask.Regions, paste("04_Wombling/Nordeste_SIM_", pick.num.subgraphs,"_Regions.grd", sep=""))
+writeRaster(Nordeste.mask.Regions, paste("04_Wombling/Nordeste_SOR_", pick.num.subgraphs,"_Regions.grd", sep=""))
 
 ##################################################################################################
 # 12.2) Map the regions
 ##################################################################################################
 
 #define and examine colors to map regions
-number.of.colors <- 4147
+number.of.colors <- pick.num.subgraphs
 subgraph.col <- colorRampPalette(brewer.pal(12,"Paired"))(number.of.colors)
 subgraph.col <- sample(subgraph.col, length(subgraph.col))
 subgraph.col[1:20]
@@ -882,18 +887,14 @@ plot(Nordeste.mask.Regions, col=subgraph.col)
 #plot regions, broad scale
 plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F)
 #plot regions, narrower scale
-plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-12,10))
-plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-25,-12))
-plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-12,10))
-plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-25,-12))
+plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F, ylim=c(-12,10))
+plot(Nordeste.mask.Regions, col=subgraph.col, useRaster=T, legend=F, ylim=c(-25,-12))
 
 #plot the mask, broad scale
 plot(Nordeste.mask.0, col="white", useRaster=T, legend=F)
 #plot the mask, narrower scale
-plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-12,10))
-plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-52,-43), ylim=c(-25,-12))
-plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-12,10))
-plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, xlim=c(-43,-35), ylim=c(-25,-12))
+plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, ylim=c(-12,10))
+plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, ylim=c(-25,-12))
 #plot the mask, even narrower scale
 
 #create a matrix with the species composition for each region
@@ -914,10 +915,13 @@ SpeciesRegions[1:5,1:5]
 dim(SpeciesRegions)
 
 #save files with species composition of for each region
-write.table(SpeciesRegions, "04_Wombling/SpeciesRegions", pick.num.subgraphs, ".txt", quote=T, sep=",")
-write.table(SizeRegions, "04_Wombling/SizeRegions", pick.num.subgraphs, ".txt", quote=T, sep=",")
+write.table(SpeciesRegions, "04_Wombling/SpeciesRegions_SIM_", pick.num.subgraphs, ".txt", quote=T, sep=",")
+write.table(SpeciesRegions, "04_Wombling/SpeciesRegions_SOR_", pick.num.subgraphs, ".txt", quote=T, sep=",")
+write.table(SizeRegions, "04_Wombling/SizeRegions_SIM_", pick.num.subgraphs, ".txt", quote=T, sep=",")
+write.table(SizeRegions, "04_Wombling/SizeRegions_SOR_", pick.num.subgraphs, ".txt", quote=T, sep=",")
 
 #read files with species composition of for each region
-SpeciesRegions <- read.table("04_Wombling/SpeciesRegions", pick.num.subgraphs, ".txt", header=T, sep=",")
+SpeciesRegions <- read.table("04_Wombling/SpeciesRegions_SIM_", pick.num.subgraphs, ".txt", header=T, sep=",")
+SpeciesRegions <- read.table("04_Wombling/SpeciesRegions_SOR_", pick.num.subgraphs, ".txt", header=T, sep=",")
 head(SpeciesRegions)
 dim(SpeciesRegions)
