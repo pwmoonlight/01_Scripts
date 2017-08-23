@@ -134,6 +134,9 @@ res(Nordeste.mask.0) #this is the resolution of the mask
 attributes(Nordeste.mask.0)
 str(Nordeste.mask.0)
 
+#Read in an earlier mask if created earlier
+Nordeste.mask.0 <- raster("000_GIS_LAYERS/nordeste.tif")
+
 #examine the total number of grid cells, the frequency of grid cells
 #that are NA and not-NA, and determine cell number (or cell ID) of
 #the cells that are not NA
@@ -464,7 +467,7 @@ obs.beta.sim[1:10]
 # Sorensen's and Simpson's indexes.
 ############################################################################################################################
 
-#obs.beta <- obs.beta.sor
+obs.beta <- obs.beta.sor
 obs.beta <- obs.beta.sim
 #obs.beta <- obs.phylo.beta.sor
 #obs.beta <- obs.phylo.beta.sim
@@ -499,16 +502,16 @@ abline(h= obs.beta[match(beta.ranks.to.evaluate, r.obs.beta)], lty=3)
 #save ranks of observed beta values: useful because the raking has a random
 #component to deal with ties, thus fully consistent results are unlikely
 #using different iterations of the ranking
-#write.table(r.obs.beta, file="04_Wombling/Rank_ObsBetaSor.txt", row.names=F)
+write.table(r.obs.beta, file="04_Wombling/Rank_ObsBetaSor.txt", row.names=F)
 write.table(r.obs.beta, file="04_Wombling/Rank_ObsBetaSim.txt", row.names=F)
 #write.table(r.obs.beta, file="04_Wombling/Rank_ObsPhyBetaSor.txt", row.names=F)
 #write.table(r.obs.beta, file="04_Wombling/Rank_ObsPhyBetaSim.txt", row.names=F)
 
 #read ranks of observed beta values
-#r.obs.beta <- read.table("Rank_ObsBetaSor_BestModels.txt", header=T, sep=",")
+r.obs.beta <- read.table("04_Wombling/Rank_ObsBetaSor.txt", header=T, sep=",")
 r.obs.beta <- read.table("04_Wombling/Rank_ObsBetaSim.txt", header=T, sep=",")
-#r.obs.beta <- read.table("Rank_ObsPhyBetaSor_BestModels.txt", header=T, sep=",")
-#r.obs.beta <- read.table("Rank_ObsPhyBetaSim_BestModels.txt", header=T, sep=",")
+#r.obs.beta <- read.table("04_Wombling/Rank_ObsPhyBetaSor.txt", header=T, sep=",")
+#r.obs.beta <- read.table("04_Wombling/Rank_ObsPhyBetaSim", header=T, sep=",")
 class(r.obs.beta)
 class(r.obs.beta[,1])
 r.obs.beta[1:100,1]
@@ -646,7 +649,7 @@ for(i in 1:length(obs.beta))
   print(i/35082*100)
   candidate.boundary.elements.to.deploy <- which(r.obs.beta > (length(r.obs.beta)-i))
   number.of.subgraphs[i] <- components(delete_edges(Nordeste.graph, candidate.boundary.elements.to.deploy))$no
-  points(i, number.of.subgraphs[i], pch=19)
+  #points(i, number.of.subgraphs[i], pch=19)
 }
 difftime(Sys.time(), start.time, units="mins")
 #this procedure might take about 1 or 2 minutes, depending on which computer is used
@@ -690,12 +693,12 @@ number.of.subgraphs[35082 - beta.ranks.to.evaluate]
 #save file with number of subgraphs, derived from the taxonomic (i.e, species based) or phylogenetic
 #versions of Sorensen's or Simpson's indices
 write.table(number.of.subgraphs, file="04_Wombling/NumberSubgraphsSim.txt", sep=",", row.names=F)
-#write.table(number.of.subgraphs, file="04_Wombling/NumberSubgraphsSor.txt", sep=",", row.names=F)
+write.table(number.of.subgraphs, file="04_Wombling/NumberSubgraphsSor.txt", sep=",", row.names=F)
 #write.table(number.of.subgraphs, file="NumberSubgraphsPhyloSor.txt", sep=",", row.names=F)
 #write.table(number.of.subgraphs, file="NumberSubgraphsPhyloSims.txt", sep=",", row.names=F)
 
 #read file with number of subgraphs, derived from Sorensen's index
-#number.of.subgraphs <- read.table("NumberSubgraphsSor.txt", header=T, sep=",")
+number.of.subgraphs <- read.table("04_Wombling/NumberSubgraphsSor.txt", header=T, sep=",")
 number.of.subgraphs <- read.table("04_Wombling/NumberSubgraphsSim.txt", header=T, sep=",")
 #number.of.subgraphs <- read.table("NumberSubgraphsPhyloSor.txt", header=T, sep=",")
 #number.of.subgraphs <- read.table("NumberSubgraphsPhyloSim.txt", header=T, sep=",")
