@@ -915,13 +915,13 @@ SpeciesRegions[1:5,1:5]
 dim(SpeciesRegions)
 
 #save files with species composition of for each region
-write.table(SpeciesRegions, "04_Wombling/SpeciesRegions_SIM_", pick.num.subgraphs, ".txt", quote=T, sep=",")
-write.table(SpeciesRegions, "04_Wombling/SpeciesRegions_SOR_", pick.num.subgraphs, ".txt", quote=T, sep=",")
-write.table(SizeRegions, "04_Wombling/SizeRegions_SIM_", pick.num.subgraphs, ".txt", quote=T, sep=",")
-write.table(SizeRegions, "04_Wombling/SizeRegions_SOR_", pick.num.subgraphs, ".txt", quote=T, sep=",")
+write.table(SpeciesRegions, paste("04_Wombling/SpeciesRegions_SIM_", pick.num.subgraphs, ".txt", sep=""), quote=T, sep=",")
+write.table(SpeciesRegions, paste("04_Wombling/SpeciesRegions_SOR_", pick.num.subgraphs, ".txt", sep=""), quote=T, sep=",")
+write.table(SizeRegions, paste("04_Wombling/SizeRegions_SIM_", pick.num.subgraphs, ".txt", sep=""), quote=T, sep=",")
+write.table(SizeRegions, paste("04_Wombling/SizeRegions_SOR_", pick.num.subgraphs, ".txt", sep=""), quote=T, sep=",")
 
 #read files with species composition of for each region
-SpeciesRegions <- read.table("04_Wombling/SpeciesRegions_SIM_", pick.num.subgraphs, ".txt", header=T, sep=",")
-SpeciesRegions <- read.table("04_Wombling/SpeciesRegions_SOR_", pick.num.subgraphs, ".txt", header=T, sep=",")
+SpeciesRegions <- read.table(paste("04_Wombling/SpeciesRegions_SIM_", pick.num.subgraphs, ".txt", sep=""), header=T, sep=",")
+SpeciesRegions <- read.table(paste("04_Wombling/SpeciesRegions_SOR_", pick.num.subgraphs, ".txt", sep=""), header=T, sep=",")
 head(SpeciesRegions)
 dim(SpeciesRegions)
