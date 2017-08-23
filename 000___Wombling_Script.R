@@ -738,7 +738,7 @@ plot(min(evaluation.number.of.subgraphs), 0,
      bty="n", xlab="Regions (or subgraphs)", ylab="Superfluity", cex.lab=1.5, cex.axis=1.5, type="n")
 for (j in evaluation.number.of.subgraphs)
 {
-  print(paste(which(evaluation.number.of.subgraphs == j), "of", length(evaluation.number.of.subgraphs)))
+  print(paste(which(evaluation.number.of.subgraphs == j), "of", length(evaluation.number.of.subgraphs), "at", Sys.time()))
   candidate.boundary.elements.to.delete <- which(r.obs.beta > (length(r.obs.beta) - match(j, number.of.subgraphs)))
   focal.graph <- delete_edges(Nordeste.graph, candidate.boundary.elements.to.delete)
   #focal.graph
@@ -776,7 +776,7 @@ plot(log(evaluation.number.of.subgraphs), log(superfluity), pch=19,
 
 #write files with superfluity values, derived from the taxonomic (i.e., species based) or phylogenetic
 #versions of Sorensen's or Simpson's indices
-#write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluitySor.txt", sep=",", row.names=F)
+write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluitySor.txt", sep=",", row.names=F)
 #write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluityPhyloSor.txt", sep=",", row.names=F)
 write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluitySim.txt", sep=",", row.names=F)
 #write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluityPhyloSim.txt", sep=",", row.names=F)
