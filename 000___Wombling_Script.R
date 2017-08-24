@@ -805,7 +805,7 @@ superfluity <- superfluity[,2]
 
 #select the number of regions (potential ecoregions) or subgraphs to map
 number.of.subgraphs[35082 - beta.ranks.to.evaluate]
-pick.num.subgraphs <- 5857
+pick.num.subgraphs <- 4147
 #make sure that the number you selected exists in the vector talling the number of subgraphs
 match(pick.num.subgraphs, number.of.subgraphs)
 
