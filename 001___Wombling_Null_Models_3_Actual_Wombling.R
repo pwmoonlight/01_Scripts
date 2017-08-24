@@ -266,7 +266,7 @@ superfluidity.OBS.sor <- superfluidity.OBS.sor[,2]
 ############################################################################################################################
 
 plot(evaluation.number.of.subgraphs.sim, superfluidity.NULL.sim[1,], type="l", col="gray70", 
-     bty="n", xlim=c(0, 1350), ylim=c(0, 10),
+     bty="n", xlim=c(0, max(evaluation.number.of.subgraphs.sim)), ylim=c(0, max(superfluidity.NULL.sim)),
      cex.axis=1.5, cex.lab=1.5, xlab="Evaluation number of subgraphs", ylab="superfluidity")
 for(i in 2:nrow(superfluidity.NULL.sim))
 {
@@ -275,7 +275,7 @@ for(i in 2:nrow(superfluidity.NULL.sim))
 points(evaluation.number.of.subgraphs.sim, superfluidity.OBS.sim, type="o", col="blue", lwd=2)
 
 plot(evaluation.number.of.subgraphs.sor, superfluidity.NULL.sor[1,], type="l", col="gray70", 
-     bty="n", xlim=c(0, 1350), ylim=c(0, 10),
+     bty="n", xlim=c(0, max(evaluation.number.of.subgraphs.sor)), ylim=c(0, max(superfluidity.NULL.sor)),
      cex.axis=1.5, cex.lab=1.5, xlab="Evaluation number of subgraphs", ylab="superfluidity")
 for(i in 2:nrow(superfluidity.NULL.sor))
 {
