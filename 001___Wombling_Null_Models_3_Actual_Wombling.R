@@ -76,7 +76,7 @@ brick.index.species.in.phylogeny <- as.character(species.in.analysis[,1])
 SDM.b <- brick("04_wombling/SDM_brick.grd")
 brick.index.species.in.phylogeny <- which(names(SDM.b) %in% gsub(" ", "_", brick.index.species.in.phylogeny))
 
-for(x in 107:length(bricks)){
+for(x in 1:length(bricks)){
   SDM.b <- brick(paste("05_Wombling_Null_Models/03_Null_Bricks/Null_", bricks[[x]], "_SDMb.grd", sep=""))
   
   writeLines(paste("\nWorking on brick ", x, " of ", length(bricks), sep=""))
@@ -162,20 +162,20 @@ for(x in 1:length(bricks)){
 
 
 ##################################################################################################
-# 11) Calculate superfluity, as defined by Oden et al. (1993, cited in the introduction).
+# 11) Calculate superfluidity, as defined by Oden et al. (1993, cited in the introduction).
 # This step may take several hours or days, and you might skip to the end of this section
-# to read a file with previously calculated superfluity values. Use code under 9.1 or 9.2 according
+# to read a file with previously calculated superfluidity values. Use code under 9.1 or 9.2 according
 # to the version of package igraph and R you are using.
 ##################################################################################################
 
-#define the percentiles of beta-diversity for which superfluity will be claculated,
+#define the percentiles of beta-diversity for which superfluidity will be claculated,
 #if you have not done so in section 8 (above)
 beta.ranks.to.evaluate <- 35082 - round(35082*seq(0.05, 0.5, 0.05))
 
 number.of.subgraphs.sim <- read.csv("04_Wombling/NumberSubgraphsSim.txt")
 number.of.subgraphs.sor <- read.csv("04_Wombling/NumberSubgraphsSor.txt")
-evaluation.number.of.subgraphs.sim <- read.csv("04_Wombling/SuperfluitySim.txt")[,1]
-evaluation.number.of.subgraphs.sor <- read.csv("04_Wombling/SuperfluitySor.txt")[,1]
+evaluation.number.of.subgraphs.sim <- read.csv("04_Wombling/superfluiditySim.txt")[,1]
+evaluation.number.of.subgraphs.sor <- read.csv("04_Wombling/superfluiditySor.txt")[,1]
 
 cell.adj.char <- cbind(as.character(cell.adj[,1]), as.character(cell.adj[,2]))
 Nordeste.graph <- graph_from_edgelist(cell.adj.char, directed = F)
@@ -220,3 +220,91 @@ for(x in 1:length(bricks)){
   write.csv(cbind(evaluation.number.of.subgraphs.sim, null.superfluidity.sim), file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/superfluidity_sim.csv", sep=""))
   write.csv(cbind(evaluation.number.of.subgraphs.sor, null.superfluidity.sor), file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/superfluidity_sor.csv", sep=""))
 }
+
+
+
+############################################################################################################################
+# 12) Test the significance of the superfluidity
+#     PART 1 :- COllate the data
+############################################################################################################################
+
+subgraphs.NULL.sim <- matrix(NA, nrow=length(dir()), ncol=35082)
+subgraphs.NULL.sor <- matrix(NA, nrow=length(dir()), ncol=35082)
+
+# Find those null bricks for which superfluidity has been calculated
+sims_w_superfluidity <- which(file.exists(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks, "/superfluidity_sim.csv", sep="")))
+sors_w_superfluidity <- which(file.exists(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks, "/superfluidity_sor.csv", sep="")))
+
+# Collate the superfluidity values into matrices
+superfluidity.NULL.sim <- matrix(NA, nrow=length(sims_w_superfluidity), ncol=10)
+superfluidity.NULL.sor <- matrix(NA, nrow=length(sors_w_superfluidity), ncol=10)
+
+for(x in 1:length(sims_w_superfluidity)){
+  superfluidity.NULL.sim[x,] <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[sims_w_superfluidity][[x]], "/superfluidity_sim.csv", sep=""))[,3]
+}
+for(x in 1:length(sors_w_superfluidity)){
+  superfluidity.NULL.sor[x,] <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[sors_w_superfluidity][[x]], "/superfluidity_sor.csv", sep=""))[,3]
+}
+
+
+# Very occasionally superfluidity will be infinite (i.e. when ALL boundary elements contribute)
+# Replace these with 200 for ease of plotting
+superfluidity.NULL.sim[superfluidity.NULL.sim==Inf] <- 200
+superfluidity.NULL.sor[superfluidity.NULL.sor==Inf] <- 200
+
+# Read in the emperical superfluidity values
+superfluidity.OBS.sim <- read.csv("04_Wombling/superfluiditySim.txt")
+evaulation.number.of.subgraphs.sim <- superfluidity.OBS.sim[,1]
+superfluidity.OBS.sim <- superfluidity.OBS.sim[,2]
+superfluidity.OBS.sor <- read.csv("04_Wombling/superfluiditySor.txt")
+evaulation.number.of.subgraphs.sor <- superfluidity.OBS.sor[,1]
+superfluidity.OBS.sor <- superfluidity.OBS.sor[,2]
+
+############################################################################################################################
+# 13) Test the significance of the superfluidity
+#     PART 2 :- Plot the data
+############################################################################################################################
+
+plot(evaluation.number.of.subgraphs.sim, superfluidity.NULL.sim[1,], type="l", col="gray70", 
+     bty="n", xlim=c(0, 1350), ylim=c(0, 10),
+     cex.axis=1.5, cex.lab=1.5, xlab="Evaluation number of subgraphs", ylab="superfluidity")
+for(i in 2:nrow(superfluidity.NULL.sim))
+{
+  points(evaluation.number.of.subgraphs.sim, superfluidity.NULL.sim[i,], type="l", col="gray70")
+}
+points(evaluation.number.of.subgraphs.sim, superfluidity.OBS.sim, type="o", col="blue", lwd=2)
+
+plot(evaluation.number.of.subgraphs.sor, superfluidity.NULL.sor[1,], type="l", col="gray70", 
+     bty="n", xlim=c(0, 1350), ylim=c(0, 10),
+     cex.axis=1.5, cex.lab=1.5, xlab="Evaluation number of subgraphs", ylab="superfluidity")
+for(i in 2:nrow(superfluidity.NULL.sor))
+{
+  points(evaluation.number.of.subgraphs.sor, superfluidity.NULL.sor[i,], type="l", col="gray70")
+}
+points(evaluation.number.of.subgraphs.sor, superfluidity.OBS.sor, type="o", col="blue", lwd=2)
+
+
+############################################################################################################################
+# 14) Test the significance of the superfluidity
+#     PART 2 :- Test for Significance
+############################################################################################################################
+
+
+p.superfluidity.sim <- rep(NA, times=ncol(superfluidity.NULL.sim))
+p.superfluidity.sor <- rep(NA, times=ncol(superfluidity.NULL.sor))
+#calculate p-value
+for(i in 1:ncol(superfluidity.NULL.sim))
+{
+  p.superfluidity.sim[i] <- sum(superfluidity.OBS.sim[i] >= superfluidity.NULL.sim[,i])/nrow(superfluidity.NULL.sim)
+}	
+
+p.superfluidity.sim
+
+#calculate p-value
+for(i in 1:ncol(superfluidity.NULL.sim))
+{
+  p.superfluidity.sor[i] <- sum(superfluidity.OBS.sor[i] >= superfluidity.NULL.sor[,i])/nrow(superfluidity.NULL.sor)
+}	
+
+p.superfluidity.sor
+
