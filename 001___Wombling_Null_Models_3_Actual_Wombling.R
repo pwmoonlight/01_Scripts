@@ -180,7 +180,7 @@ evaluation.number.of.subgraphs.sor <- read.csv("04_Wombling/superfluiditySor.txt
 cell.adj.char <- cbind(as.character(cell.adj[,1]), as.character(cell.adj[,2]))
 Nordeste.graph <- graph_from_edgelist(cell.adj.char, directed = F)
 
-for(x in 1:length(bricks)){
+for(x in 121:112){
   writeLines(paste("brick ", x, " of ", length(bricks), sep=""))
   null.number.of.subgraphs.sim <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim_number_of_subgraphs.csv", sep=""))
   null.number.of.subgraphs.sor <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor_number_of_subgraphs.csv", sep=""))
