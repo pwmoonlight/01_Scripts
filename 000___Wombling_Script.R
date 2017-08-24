@@ -86,7 +86,7 @@
 # "NumberSubgraphsSimBestModels_150arc_2017June13.txt", "NumberSubgraphsSorBestModels_150arc_2017June13.txt",
 # "NumberSubgraphsPhyloSorBestModels_150arc_2017June13", "NumberSubgraphsPhyloSimBestModels_150arc_2017June13.txt", 
 # 
-# - file with superfluity values, derived from taxonomic and phylogenetic Sorensen's and Simpson's indexes:
+# - file withsuperfluidity values, derived from taxonomic and phylogenetic Sorensen's and Simpson's indexes:
 # "SuperfluitySimBestModels_150arc_2017June13.txt", "SuperfluitySorBestModels_150arc_2017June13.txt", 
 # "SuperfluityPhyloSorBestModels_150arc_2017June13.txt", "SuperfluityPhyloSimBestModels_150arc_2017June13.txt"
 #
@@ -712,24 +712,24 @@ number.of.subgraphs[1:100]
 
 
 ##################################################################################################
-# 11) Calculate superfluity, as defined by Oden et al. (1993, cited in the introduction).
+# 11) Calculatesuperfluidity, as defined by Oden et al. (1993, cited in the introduction).
 # This step may take several hours or days, and you might skip to the end of this section
-# to read a file with previously calculated superfluity values. Use code under 9.1 or 9.2 according
+# to read a file with previously calculatedsuperfluidity values. Use code under 9.1 or 9.2 according
 # to the version of package igraph and R you are using.
 ##################################################################################################
 
-#define the percentiles of beta-diversity for which superfluity will be claculated,
+#define the percentiles of beta-diversity for whichsuperfluidity will be claculated,
 #if you have not done so in section 8 (above)
 beta.ranks.to.evaluate <- 35082 - round(35082*seq(0.05, 0.5, 0.05))
 
-#define the number of regions (potentially ecoregions or "subgraphs") for which superfluity will be calculated
+#define the number of regions (potentially ecoregions or "subgraphs") for whichsuperfluidity will be calculated
 evaluation.number.of.subgraphs <- number.of.subgraphs[35082 - beta.ranks.to.evaluate]
 
 #check that all evaluation points exist in the vector "number.of.subgraphs"
 match(evaluation.number.of.subgraphs, number.of.subgraphs)  
 sum(is.na(match(evaluation.number.of.subgraphs, number.of.subgraphs)))
 
-#calculate superfluity
+#calculatesuperfluidity
 start.time <- Sys.time()
 superfluity <- rep(NA, times=length(evaluation.number.of.subgraphs))
 plot(min(evaluation.number.of.subgraphs), 0,
@@ -748,8 +748,8 @@ for (j in evaluation.number.of.subgraphs)
   {
     necessary.edge[i] <- ifelse(components(add_edges(focal.graph, cell.adj.char[candidate.boundary.elements.to.delete[i],]))$no < components(focal.graph)$no, 1, 0)
   }
-  superfluity[which(evaluation.number.of.subgraphs==j)] <- sum(necessary.edge<1)/sum(necessary.edge>0)
-  points(j, superfluity[which(evaluation.number.of.subgraphs==j)], pch=19)
+ superfluidity[which(evaluation.number.of.subgraphs==j)] <- sum(necessary.edge<1)/sum(necessary.edge>0)
+  points(j,superfluidity[which(evaluation.number.of.subgraphs==j)], pch=19)
 }
 difftime(Sys.time(), start.time, units="mins")
 #this procedure might take about 14 minutes, depending on which computer is used
@@ -760,7 +760,7 @@ length(superfluity)
 summary(superfluity)
 
 #plot the results in linear scale
-plot(evaluation.number.of.subgraphs, superfluity, pch=19,
+plot(evaluation.number.of.subgraphs,superfluidity, pch=19,
      bty="n", cex.axis=1.5, cex.lab=1.5, type="o",
      xlab="Regions (or subgraphs)", ylab="Superfluity")
 
@@ -774,14 +774,14 @@ plot(log(evaluation.number.of.subgraphs), log(superfluity), pch=19,
      bty="n", cex.axis=1.5, cex.lab=1.5, type="o",
      xlab="Log (Regions (or subgraphs))", ylab="Log (Superfluity)")
 
-#write files with superfluity values, derived from the taxonomic (i.e., species based) or phylogenetic
+#write files withsuperfluidity values, derived from the taxonomic (i.e., species based) or phylogenetic
 #versions of Sorensen's or Simpson's indices
-write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluitySor.txt", sep=",", row.names=F)
-#write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluityPhyloSor.txt", sep=",", row.names=F)
-write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluitySim.txt", sep=",", row.names=F)
-#write.table(cbind(evaluation.number.of.subgraphs, superfluity), file="04_Wombling/SuperfluityPhyloSim.txt", sep=",", row.names=F)
+write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/SuperfluitySor.txt", sep=",", row.names=F)
+#write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/SuperfluityPhyloSor.txt", sep=",", row.names=F)
+write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/SuperfluitySim.txt", sep=",", row.names=F)
+#write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/SuperfluityPhyloSim.txt", sep=",", row.names=F)
 
-#read file with superfluity values, dderived from the taxonomic (i.e., species based) or phylogenetic
+#read file withsuperfluidity values, dderived from the taxonomic (i.e., species based) or phylogenetic
 #versions of Sorensen's or Simpson's indices
 #superfluity <- read.table("04_Wombling/SuperfluitySor.txt", header=T, sep=",")
 #superfluity <- read.table("04_Wombling/SuperfluityPhyloSor.txt", header=T, sep=",")
@@ -791,8 +791,8 @@ head(superfluity)
 class(superfluity)
 length(superfluity)
 summary(superfluity)
-evaluation.number.of.subgraphs <- superfluity[,1]
-superfluity <- superfluity[,2]
+evaluation.number.of.subgraphs <-superfluidity[,1]
+superfluity <-superfluidity[,2]
 
 
 ##################################################################################################
