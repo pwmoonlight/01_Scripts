@@ -228,8 +228,8 @@ for(x in 121:112){
 #     PART 1 :- COllate the data
 ############################################################################################################################
 
-subgraphs.NULL.sim <- matrix(NA, nrow=length(dir()), ncol=35082)
-subgraphs.NULL.sor <- matrix(NA, nrow=length(dir()), ncol=35082)
+subgraphs.NULL.sim <- matrix(NA, nrow=length(bricks), ncol=35082)
+subgraphs.NULL.sor <- matrix(NA, nrow=length(bricks), ncol=35082)
 
 # Find those null bricks for which superfluidity has been calculated
 sims_w_superfluidity <- which(file.exists(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks, "/superfluidity_sim.csv", sep="")))
@@ -308,3 +308,83 @@ for(i in 1:ncol(superfluidity.NULL.sim))
 
 p.superfluidity.sor
 
+
+############################################################################################################################
+# 15) Test the significance of the number of subgraphs
+#     PART 1 :- COllate the data
+############################################################################################################################
+
+subgraphs.NULL.sim <- matrix(NA, nrow=length(bricks), ncol=35082)
+subgraphs.NULL.sor <- matrix(NA, nrow=length(bricks), ncol=35082)
+
+# Find those null bricks for which the number of subgraphs has been calculated
+sims_w_no_o_subgraphs <- which(file.exists(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks, "/sim_number_of_subgraphs.csv", sep="")))
+sors_w_no_o_subgraphs <- which(file.exists(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks, "/sor_number_of_subgraphs.csv", sep="")))
+
+# Collate the superfluidity values into matrices
+no.o.subgraphs.NULL.sim <- matrix(NA, nrow=length(sims_w_no_o_subgraphs), ncol=35082)
+no.o.subgraphs.NULL.sor <- matrix(NA, nrow=length(sors_w_no_o_subgraphs), ncol=35082)
+
+for(x in 1:length(sims_w_no_o_subgraphs)){
+  no.o.subgraphs.NULL.sim[x,] <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[sims_w_no_o_subgraphs][[x]], "/sim_number_of_subgraphs.csv", sep=""))[,2]
+}
+for(x in 1:length(sors_w_no_o_subgraphs)){
+  no.o.subgraphs.NULL.sor[x,] <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[sors_w_no_o_subgraphs][[x]], "/sor_number_of_subgraphs.csv", sep=""))[,2]
+}
+
+# Read in the emperical superfluidity values
+no.o.subgraphs.OBS.sim <- read.csv("04_Wombling/NumberSubgraphsSim.txt")
+no.o.subgraphs.OBS.sim <- no.o.subgraphs.OBS.sim[,1]
+no.o.subgraphs.OBS.sor <- read.csv("04_Wombling/NumberSubgraphsSor.txt")
+no.o.subgraphs.OBS.sor <- no.o.subgraphs.OBS.sor[,1]
+
+
+############################################################################################################################
+# 15) Test the significance of the number of subgraphs
+#     PART 2 :- Plot the data
+############################################################################################################################
+
+plot(1:35082, no.o.subgraphs.NULL.sim[1,], type="l", col="gray70", 
+     bty="n", xlim=c(0, max(35082)), ylim=c(0, max(no.o.subgraphs.NULL.sim)),
+     cex.axis=1.5, cex.lab=1.5, xlab="Evaluation number of subgraphs", ylab="superfluidity")
+for(i in 2:nrow(no.o.subgraphs.NULL.sim))
+{
+  points(1:35082, no.o.subgraphs.NULL.sim[i,], type="l", col="gray70")
+}
+points(1:35082, no.o.subgraphs.OBS.sim, type="o", col="blue", lwd=1)
+
+plot(1:35082, no.o.subgraphs.NULL.sor[1,], type="l", col="gray70", 
+     bty="n", xlim=c(0, max(35082)), ylim=c(0, max(no.o.subgraphs.NULL.sor)),
+     cex.axis=1.5, cex.lab=1.5, xlab="Evaluation number of subgraphs", ylab="superfluidity")
+for(i in 2:nrow(no.o.subgraphs.NULL.sor))
+{
+  points(1:35082, no.o.subgraphs.NULL.sor[i,], type="l", col="gray70")
+}
+points(1:35082, no.o.subgraphs.OBS.sor, type="o", col="blue", lwd=1)
+
+
+############################################################################################################################
+# 16) Test the significance of the number of subgraphs
+#     PART 2 :- Test for Significance
+############################################################################################################################
+
+
+p.no.o.subgraphs.sim <- rep(NA, times=ncol(no.o.subgraphs.NULL.sim))
+p.no.o.subgraphs.sor <- rep(NA, times=ncol(no.o.subgraphs.NULL.sor))
+#calculate p-value
+for(i in 1:ncol(no.o.subgraphs.NULL.sim))
+{
+  p.no.o.subgraphs.sim[i] <- sum(no.o.subgraphs.OBS.sim[i] <= no.o.subgraphs.NULL.sim[,i])/nrow(no.o.subgraphs.NULL.sim)
+}	
+
+p.no.o.subgraphs.sim
+plot(p.no.o.subgraphs.sim)
+
+#calculate p-value
+for(i in 1:ncol(no.o.subgraphs.NULL.sor))
+{
+  p.no.o.subgraphs.sor[i] <- sum(no.o.subgraphs.OBS.sor[i] <= no.o.subgraphs.NULL.sor[,i])/nrow(no.o.subgraphs.NULL.sor)
+}	
+
+p.no.o.subgraphs.sor
+plot(p.no.o.subgraphs.sor)
