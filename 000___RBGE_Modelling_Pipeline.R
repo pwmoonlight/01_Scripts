@@ -299,7 +299,7 @@ PCA_bioclim <- c(4,9,10,11,13,17,18)
 ################################################
 
 
-dir.create("13_Models_Bioclim", showWarnings = F)
+dir.create("14_Models_Bioclim", showWarnings = F)
 require(dismo)
 
 bg_bioclim <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil Masked BIOCLIM", pattern="*3_degrees.tif$", full.names = T), raster)
