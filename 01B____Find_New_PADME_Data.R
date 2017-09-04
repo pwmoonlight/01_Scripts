@@ -14,7 +14,7 @@
 
 require("XLConnect")
 
-distribution_data <- list.files('02_Input_Distribution_Data/PADME', pattern="[.]xls$", full.names=T)
+distribution_data <- list.files('03_Modelling/02_Input_Distribution_Data/PADME', pattern="[.]xls$", full.names=T)
 distribution_data <- loadWorkbook(distribution_data)
 distribution_data <- readWorksheet(distribution_data, sheet="sheet4", header=T)
 distribution_data <- as.data.frame(distribution_data)
@@ -40,10 +40,10 @@ require("rgdal")
 species_distribution_data <- lapply(1:length(species), function(x){distribution_data[distribution_data$Species == species[[x]],]})
 
 #Save the data
-dir.create("03_Input_Distribution_Data_by_Species", showWarnings = F)
-dir.create("03_Input_Distribution_Data_by_Species/PADME", showWarnings = F)
-lapply(species, function(x){dir.create(paste("03_Input_Distribution_Data_by_Species/PADME/", x, sep=""), showWarnings = F)})
-lapply(1:length(species), function(x){write.csv(species_distribution_data[[x]], file=paste("03_Input_Distribution_Data_by_Species/PADME/", species[[x]], "/data.csv", sep=""))})
+dir.create("03_Modelling/03_Input_Distribution_Data_by_Species", showWarnings = F)
+dir.create("03_Modelling/03_Input_Distribution_Data_by_Species/PADME", showWarnings = F)
+lapply(species, function(x){dir.create(paste("03_Modelling/03_Input_Distribution_Data_by_Species/PADME/", x, sep=""), showWarnings = F)})
+lapply(1:length(species), function(x){write.csv(species_distribution_data[[x]], file=paste("03_Modelling/03_Input_Distribution_Data_by_Species/PADME/", species[[x]], "/data.csv", sep=""))})
 
 
 
@@ -51,17 +51,17 @@ lapply(1:length(species), function(x){write.csv(species_distribution_data[[x]], 
 ### Find Which Species Have not Previously Been Modelled at all
 ### -----------------------------------------------------------
 
-dir.create("99_Modelled_Species_Distribution_Data", showWarnings = F)
-dir.create("99_Modelled_Species_Distribution_Data/PADME", showWarnings = F)
-dir.create("04_Species_To_Model_Distribution_Data", showWarnings = F)
-dir.create("04_Species_To_Model_Distribution_Data/PADME", showWarnings = F)
+dir.create("03_Modelling/99_Modelled_Species_Distribution_Data", showWarnings = F)
+dir.create("03_Modelling/99_Modelled_Species_Distribution_Data/PADME", showWarnings = F)
+dir.create("03_Modelling/04_Species_To_Model_Distribution_Data", showWarnings = F)
+dir.create("03_Modelling/04_Species_To_Model_Distribution_Data/PADME", showWarnings = F)
 
 # List previously modelled species
-previously_modelled_species <- list.dirs("99_Modelled_Species_Distribution_Data/PADME", full.names=F, recursive=F)
+previously_modelled_species <- list.dirs("03_Modelling/99_Modelled_Species_Distribution_Data/PADME", full.names=F, recursive=F)
 not_previously_modelled_species <- !(species %in% previously_modelled_species)
 
-lapply(species[not_previously_modelled_species], function(x){dir.create(paste("04_Species_To_Model_Distribution_Data/PADME/", x, sep=""), showWarnings = F)})
-lapply((1:length(species))[not_previously_modelled_species], function(x){write.csv(species_distribution_data[[x]], paste("04_Species_To_Model_Distribution_Data/PADME/", species[[x]], "/data.csv", sep=""))})
+lapply(species[not_previously_modelled_species], function(x){dir.create(paste("03_Modelling/04_Species_To_Model_Distribution_Data/PADME/", x, sep=""), showWarnings = F)})
+lapply((1:length(species))[not_previously_modelled_species], function(x){write.csv(species_distribution_data[[x]], paste("03_Modelling/04_Species_To_Model_Distribution_Data/PADME/", species[[x]], "/data.csv", sep=""))})
 
 writeLines("\n\n##############################################################")
 writeLines("### The species never previously modelled with PADME data are:\n")
@@ -72,8 +72,8 @@ for(x in species[not_previously_modelled_species]){writeLines(x)}
 ### Find Which Species Have not Previously Been Modelled with the same data
 ### -----------------------------------------------------------------------
 
-previously_modelled_species <- list.dirs("99_Modelled_Species_Distribution_Data/PADME", full.names=F, recursive=F)
-previously_modelled_species_distribution_data <- lapply(1:length(previously_modelled_species), function(x){read.csv(paste("99_Modelled_Species_Distribution_Data/PADME/", previously_modelled_species[[x]], "/data.csv", sep=""))[,-1]})
+previously_modelled_species <- list.dirs("03_Modelling/99_Modelled_Species_Distribution_Data/PADME", full.names=F, recursive=F)
+previously_modelled_species_distribution_data <- lapply(1:length(previously_modelled_species), function(x){read.csv(paste("03_Modelling/99_Modelled_Species_Distribution_Data/PADME/", previously_modelled_species[[x]], "/data.csv", sep=""))[,-1]})
 
 species_to_crossref <- species[which(species %in% previously_modelled_species)]
 crossrefed_species <- c()
@@ -84,11 +84,11 @@ for(x in 1:length(species_to_crossref)){
   old_data <- previously_modelled_species_distribution_data[[old]]
 
   new <- which(species == species_to_crossref[[x]])
-  new_data <- read.csv(paste("03_Input_Distribution_Data_by_Species/PADME/", species[[new]], "/data.csv", sep=""))[,-1]
+  new_data <- read.csv(paste("03_Modelling/03_Input_Distribution_Data_by_Species/PADME/", species[[new]], "/data.csv", sep=""))[,-1]
 
   if(!identical(old_data,new_data)){
-    dir.create(paste("04_Species_To_Model_Distribution_Data/PADME/", species_to_crossref[[x]], sep=""), showWarnings = F)
-    write.csv(new_data,paste("04_Species_To_Model_Distribution_Data/PADME/", species_to_crossref[[x]], "/data.csv", sep=""))
+    dir.create(paste("03_Modelling/04_Species_To_Model_Distribution_Data/PADME/", species_to_crossref[[x]], sep=""), showWarnings = F)
+    write.csv(new_data,paste("03_Modelling/04_Species_To_Model_Distribution_Data/PADME/", species_to_crossref[[x]], "/data.csv", sep=""))
     crossrefed_species[[y]] <- species_to_crossref[[x]]
     y <- y+1
   }
