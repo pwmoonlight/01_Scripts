@@ -21,13 +21,23 @@ CBIs <- read.csv("03_Modelling/CBI_results.csv", row.names = 1)
 CBIs <- CBIs[which(CBIs[,6] >= 0.5),]
 species <- rownames(CBIs)
 
+<<<<<<< HEAD
+example_model <- model <- raster(paste("11_models/Bias_Spatial_Filtering/", species[[1]], ".tif", sep=""))
+=======
 example_model <- model <- raster(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[1]], ".tif", sep=""))
+>>>>>>> 05df30d7c27e26ba5ca13b66d316e101f9462003
 threshold_value <- 1.1
 example_model <- calc(example_model, fun=rc)
 
 for(x in 1:length(species)){
+<<<<<<< HEAD
+  model <- raster(paste("11_models/Bias_Spatial_Filtering/", species[[x]], ".tif", sep=""))
+  threshold_value <- read.csv(paste("11_models/Bias_Spatial_Filtering/", species[[x]], "/maxentResults.csv", sep=""))
+  threshold_value <- threshold_value$X10.percentile.training.presence.Cloglog.threshold[6]
+=======
   model <- raster(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], ".tif", sep=""))
   threshold_value <- read.csv(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], "/maxentResults.csv", sep=""))
+<<<<<<< HEAD
   if(length(threshold_value$X10.percentile.training.presence.logistic.threshold[6]) == 1){
     threshold_value <- threshold_value$X10.percentile.training.presence.logistic.threshold[6]
   }
@@ -35,6 +45,12 @@ for(x in 1:length(species)){
     threshold_value <- threshold_value$X10.percentile.training.presence.Cloglog.threshold[6]
   }
   #sp.circle <- readShapePoly(paste("03_Modelling/05_Species_Circles/", species[[x]], ".shp", sep=""))
+=======
+  threshold_value <- threshold_value$X10.percentile.training.presence.logistic.threshold[6]
+>>>>>>> 05df30d7c27e26ba5ca13b66d316e101f9462003
+  
+  sp.circle <- readShapePoly(paste("03_Modelling/05_Species_Circles/", species[[x]], ".shp", sep=""))
+>>>>>>> 0a325e238c5a9880c3629d2f114d65d86dde2fd2
   
   writeLines(paste("\nWorking on", species[[x]]))
   writeLines(paste("...The 10 percentile training presence logistic threshold  for", species[[x]], "is:", threshold_value))#

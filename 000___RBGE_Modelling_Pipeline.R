@@ -352,6 +352,20 @@ PCA_bioclim <- c(4,9,10,11,13,17,18)
 
 
 
+################################################################################
+####------------------------------ MODULE 5a -------------------------------####
+################################################################################
+######### - Perform a PCA to select bioclim environmental variables - ##########
+################################################################################
+
+
+source(paste(getwd(), "/01_Scripts/04____PCA_bioclim.R", sep=""))
+
+# This line will need manual editing depending upon which variables are selected
+PCA_bioclim <- c(4,9,10,11,13,17,18)
+
+
+
 ################################################
 ####--------------- MODULE 7 ---------------####
 ################################################
@@ -362,6 +376,9 @@ PCA_bioclim <- c(4,9,10,11,13,17,18)
 dir.create("14_Models_Bioclim", showWarnings = F)
 require(dismo)
 
+<<<<<<< HEAD
+bg_bioclim <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil Masked BIOCLIM", pattern="*3_degrees.tif$", full.names = T), raster)
+=======
 
 ### Read in the bioclim data ###
 ### ------------------------ ###
@@ -371,6 +388,7 @@ require(dismo)
 #bg_bioclim <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil Masked BIOCLIM", pattern="*3_degrees.tif$", full.names = T), raster)
 bg_bioclim <- lapply(list.files(path="000_GIS_LAYERS/Brazil Masked BIOCLIM", pattern="*3_degrees.tif$", full.names = T), raster)
 
+>>>>>>> 05df30d7c27e26ba5ca13b66d316e101f9462003
 # Usually you will have done a PCA by this point. Keep only those BG layers selected during the PCA  
 bg_bioclim <- bg_bioclim[PCA_bioclim]
 bg_bioclim <- stack(bg_bioclim)
