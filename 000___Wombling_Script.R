@@ -543,8 +543,8 @@ r.obs.beta[1:100]
 plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F)
 
 selected.quantile <- seq(0.95, 0.5, -0.05)
-quantile(obs.beta, probs=selected.quantile[1])
-values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta, probs=selected.quantile[1]))
+quantile(obs.beta[,1], probs=selected.quantile[1])
+values.at.above.quantile <- sum(obs.beta[,1] >= quantile(obs.beta[,1], probs=selected.quantile[1]))
 values.at.above.quantile
 
 flag.candidate.boundary.elements <- r.obs.beta > (length(r.obs.beta)-values.at.above.quantile)
@@ -552,7 +552,7 @@ sum(flag.candidate.boundary.elements)
 
 for(i in 1:length(selected.quantile))
 {
-  values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta, probs=selected.quantile[i]))
+  values.at.above.quantile <- sum(obs.beta[,1] >= quantile(obs.beta[,1], probs=selected.quantile[i]))
   flag.candidate.boundary.elements <- r.obs.beta > (length(r.obs.beta)-values.at.above.quantile)
 
   from.coor <- xyFromCell(Nordeste.mask.0, cell.adj[flag.candidate.boundary.elements,1], spatial=FALSE)
@@ -578,9 +578,9 @@ plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F, xlim=c(-87,-85), ylim
 plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(10.5,13))
 plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(13,15.5))
 
-selected.quantile <- 0.99
-quantile(obs.beta, probs=selected.quantile)
-values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta, probs=selected.quantile))
+selected.quantile <- 0.95
+quantile(obs.beta[,1], probs=selected.quantile)
+values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta[,1], probs=selected.quantile))
 values.at.above.quantile
 
 flag.candidate.boundary.elements <- r.obs.beta > (length(r.obs.beta)-values.at.above.quantile)
@@ -635,21 +635,21 @@ is.connected(Nordeste.graph)
 
 #run a loop to sequentially remove spatial links and count the resulting number
 #of subgraphs, which correspond to isolated regions (and potentially ecoregions).
-number.of.subgraphs <- rep(NA, times=length(obs.beta))
+number.of.subgraphs <- rep(NA, times=length(obs.beta[,1]))
 plot(0, components(Nordeste.graph)$no, 
-     xlim=c(0, sum(obs.beta >= quantile(obs.beta, probs=0))),
-     ylim=c(15,50000),
+     xlim=c(0, sum(obs.beta[,1] >= quantile(obs.beta[,1], probs=0))),
+     ylim=c(15,length(obs.beta[,1])),
      xlab="Candidate boundary elements deployed", ylab="Regions (or subgraphs)",
      pch=19, bty="n", cex.axis=1.5, cex.lab=1.5) 
 #
 start.time <- Sys.time()
 # 
-for(i in 1:length(obs.beta))
+for(i in 1:length(obs.beta[,1]))
 {
   print(i/35082*100)
   candidate.boundary.elements.to.deploy <- which(r.obs.beta > (length(r.obs.beta)-i))
   number.of.subgraphs[i] <- components(delete_edges(Nordeste.graph, candidate.boundary.elements.to.deploy))$no
-  #points(i, number.of.subgraphs[i], pch=19)
+  points(i, number.of.subgraphs[i], pch=19)
 }
 difftime(Sys.time(), start.time, units="mins")
 #this procedure might take about 1 or 2 minutes, depending on which computer is used
@@ -731,14 +731,14 @@ sum(is.na(match(evaluation.number.of.subgraphs, number.of.subgraphs)))
 
 #calculatesuperfluidity
 start.time <- Sys.time()
-superfluity <- rep(NA, times=length(evaluation.number.of.subgraphs))
+superfluidity <- rep(NA, times=length(evaluation.number.of.subgraphs))
 plot(min(evaluation.number.of.subgraphs), 0,
      xlim=c(min(evaluation.number.of.subgraphs), max(evaluation.number.of.subgraphs)),
      ylim=c(0, 200), 
      bty="n", xlab="Regions (or subgraphs)", ylab="Superfluity", cex.lab=1.5, cex.axis=1.5, type="n")
 for (j in evaluation.number.of.subgraphs)
 {
-  print(paste(which(evaluation.number.of.subgraphs == j), "of", length(evaluation.number.of.subgraphs), "at", Sys.time()))
+  writeLines(paste(which(evaluation.number.of.subgraphs == j), "of", length(evaluation.number.of.subgraphs), "at", Sys.time()))
   candidate.boundary.elements.to.delete <- which(r.obs.beta > (length(r.obs.beta) - match(j, number.of.subgraphs)))
   focal.graph <- delete_edges(Nordeste.graph, candidate.boundary.elements.to.delete)
   #focal.graph
@@ -755,9 +755,9 @@ difftime(Sys.time(), start.time, units="mins")
 #this procedure might take about 14 minutes, depending on which computer is used
 #
 #examine the results
-class(superfluity)
-length(superfluity)
-summary(superfluity)
+class(superfluidity)
+length(superfluidity)
+summary(superfluidity)
 
 #plot the results in linear scale
 plot(evaluation.number.of.subgraphs,superfluidity, pch=19,

@@ -12,7 +12,7 @@ source(paste(getwd(), "/01_Scripts/Minor_Modules/5___CBI_Function.R", sep=""))
 require(dismo)
 require(maptools)
 
-kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
+kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.asc")
 
 CBI_results <- as.data.frame(matrix(nrow=length(species), ncol=12))
 rownames(CBI_results) <- species

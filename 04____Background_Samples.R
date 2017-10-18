@@ -7,6 +7,10 @@
 ###############################################################################################################
 
 require(maptools)
+require(rgdal)
+require(dismo)
+require(rgeos)
+require(raster)
 
 dir.create("03_Modelling/05_Species_Circles", showWarnings=F)
 dir.create("03_Modelling/10_Background_Data", showWarnings=F)

@@ -253,10 +253,10 @@ superfluidity.NULL.sim[superfluidity.NULL.sim==Inf] <- 200
 superfluidity.NULL.sor[superfluidity.NULL.sor==Inf] <- 200
 
 # Read in the emperical superfluidity values
-superfluidity.OBS.sim <- read.csv("04_Wombling/superfluiditySim.txt")
+superfluidity.OBS.sim <- read.csv("04_Wombling/SuperfluiditySim.txt")
 evaulation.number.of.subgraphs.sim <- superfluidity.OBS.sim[,1]
 superfluidity.OBS.sim <- superfluidity.OBS.sim[,2]
-superfluidity.OBS.sor <- read.csv("04_Wombling/superfluiditySor.txt")
+superfluidity.OBS.sor <- read.csv("04_Wombling/SuperfluiditySor.txt")
 evaulation.number.of.subgraphs.sor <- superfluidity.OBS.sor[,1]
 superfluidity.OBS.sor <- superfluidity.OBS.sor[,2]
 
@@ -265,23 +265,23 @@ superfluidity.OBS.sor <- superfluidity.OBS.sor[,2]
 #     PART 2 :- Plot the data
 ############################################################################################################################
 
-plot(evaluation.number.of.subgraphs.sim, superfluidity.NULL.sim[1,], type="l", col="gray70", 
-     bty="n", xlim=c(0, max(evaluation.number.of.subgraphs.sim)), ylim=c(0, max(superfluidity.NULL.sim)),
+plot(evaulation.number.of.subgraphs.sim, superfluidity.NULL.sim[1,], type="l", col="gray70", 
+     bty="n", xlim=c(0, max(evaulation.number.of.subgraphs.sim)), ylim=c(0, max(superfluidity.NULL.sim)),
      cex.axis=1.5, cex.lab=1.5, xlab="Evaluation number of subgraphs", ylab="superfluidity")
 for(i in 2:nrow(superfluidity.NULL.sim))
 {
-  points(evaluation.number.of.subgraphs.sim, superfluidity.NULL.sim[i,], type="l", col="gray70")
+  points(evaulation.number.of.subgraphs.sor, superfluidity.NULL.sim[i,], type="l", col="gray70")
 }
-points(evaluation.number.of.subgraphs.sim, superfluidity.OBS.sim, type="o", col="blue", lwd=2)
+points(evaulation.number.of.subgraphs.sim, superfluidity.OBS.sim, type="o", col="blue", lwd=2)
 
-plot(evaluation.number.of.subgraphs.sor, superfluidity.NULL.sor[1,], type="l", col="gray70", 
-     bty="n", xlim=c(0, max(evaluation.number.of.subgraphs.sor)), ylim=c(0, max(superfluidity.NULL.sor)),
+plot(evaulation.number.of.subgraphs.sor, superfluidity.NULL.sor[1,], type="l", col="gray70", 
+     bty="n", xlim=c(0, max(evaulation.number.of.subgraphs.sor)), ylim=c(0, max(superfluidity.NULL.sor)),
      cex.axis=1.5, cex.lab=1.5, xlab="Evaluation number of subgraphs", ylab="superfluidity")
 for(i in 2:nrow(superfluidity.NULL.sor))
 {
-  points(evaluation.number.of.subgraphs.sor, superfluidity.NULL.sor[i,], type="l", col="gray70")
+  points(evaulation.number.of.subgraphs.sor, superfluidity.NULL.sor[i,], type="l", col="gray70")
 }
-points(evaluation.number.of.subgraphs.sor, superfluidity.OBS.sor, type="o", col="blue", lwd=2)
+points(evaulation.number.of.subgraphs.sor, superfluidity.OBS.sor, type="o", col="blue", lwd=2)
 
 
 ############################################################################################################################

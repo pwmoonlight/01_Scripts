@@ -6,6 +6,8 @@
   ###############################################################################################################
 ###############################################################################################################
 
+require(raster)
+
 dir.create("03_Modelling/12_Thresholded_Models", showWarnings=F)
 
 ## Define Threshold Function
@@ -30,9 +32,9 @@ for(x in 1:length(species)){
     threshold_value <- threshold_value$X10.percentile.training.presence.logistic.threshold[6]
   }
   if(length(threshold_value$X10.percentile.training.presence.Cloglog.threshold[6]) == 1){
-    threshold_value <- threshold_value$X10.percentile.training.presence.logistic.threshold[6]
+    threshold_value <- threshold_value$X10.percentile.training.presence.Cloglog.threshold[6]
   }
-  sp.circle <- readShapePoly(paste("03_Modelling/05_Species_Circles/", species[[x]], ".shp", sep=""))
+  #sp.circle <- readShapePoly(paste("03_Modelling/05_Species_Circles/", species[[x]], ".shp", sep=""))
   
   writeLines(paste("\nWorking on", species[[x]]))
   writeLines(paste("...The 10 percentile training presence logistic threshold  for", species[[x]], "is:", threshold_value))#
@@ -40,7 +42,7 @@ for(x in 1:length(species)){
   ## Perform Thresholding
   thresholded_model <- calc(model, fun=rc)
   
-  thresholded_model <- mask(thresholded_model, sp.circle)
+  #thresholded_model <- mask(thresholded_model, sp.circle)
   
   thresholded_model <- merge(thresholded_model, example_model)
   
