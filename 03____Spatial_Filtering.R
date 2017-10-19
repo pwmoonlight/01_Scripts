@@ -55,7 +55,7 @@ scale_corrected_cell_number <- lapply(scale_corrected_species_data_frames, funct
 writeLines(paste("\nThe following species have fewer than five points following Spatial Filtering:\n"))
 dir.create("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data/", showWarnings = FALSE)
 for(x in 1:length(species)){
-  if(scale_corrected_cell_number[[x]]>4){
+  if(scale_corrected_cell_number[[x]]>(cutoff-1)){
     scale_corrected_species_data_frames[[x]] <- as.data.frame(scale_corrected_species_data_frames[[x]])
     scale_corrected_species_data_frames[[x]][,3] <- cellFromXY(kde_raster, scale_corrected_species_data_frames[[x]][,2:1])
     scale_corrected_species_data_frames[[x]] <- scale_corrected_species_data_frames[[x]][!duplicated(scale_corrected_species_data_frames[[x]][,3]),]
@@ -65,7 +65,7 @@ for(x in 1:length(species)){
     
     write.csv(scale_corrected_species_data_frames[[x]], paste("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))
   }
-  if(scale_corrected_cell_number[[x]]<5){
+  if(scale_corrected_cell_number[[x]]<cutoff){
     writeLines(paste(species[[x]]))
   }
 }
