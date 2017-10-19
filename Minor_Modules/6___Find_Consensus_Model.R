@@ -6,6 +6,7 @@
   ###############################################################################################################
 ###############################################################################################################
 
+<<<<<<< HEAD
 dir.create("03_Modelling/11_models/Consensus", showWarnings=F)
 dir.create("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering/", showWarnings=F)
 
@@ -28,4 +29,18 @@ for(x in length(species):1){
   }
 }
 
+=======
+require(raster)
+
+for(x in 1:length(species)){
+  
+  writeLines(paste("   ...Working With ", species[[x]], sep=""))
+  
+  model <- lapply(list.files(path="03_Modelling/11_models/Bias_Spatial_Filtering/", full.names = T, pattern=paste(species[[x]], "_", sep="")), raster)
+  model <- stack(model)
+  
+  writeRaster(model, file=paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], ".tif", sep=""), overwrite=T)
+}
+
+>>>>>>> ff303605a6e19477b6f08ce833057f75dc4dc1ab
 rm(x, model)
