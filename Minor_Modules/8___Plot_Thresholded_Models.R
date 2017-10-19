@@ -16,7 +16,7 @@ for(x in 1:length(species)){
   masked.model <- mask(model, sp.circle)
   species.data <- read.csv(paste("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))[,-1]
   
-  png(filename=paste("03_Modelling/11_models/Plots_Thresholded/", species[[x]], ".png"), width=8126, height=8126, units="px")
+  png(filename=paste("03_Modelling/11_models/Plots_Thresholded/", species[[x]], ".png", sep=""), width=8126, height=8126, units="px")
     plot(model, col=gray.colors(100, start = 0.7, end = 1, gamma = 2.2, alpha = NULL), legend=F)
     plot(masked.model, add=T, legend=F)
     plot(SpatialPoints(species.data[,2:1]), add=T, cex=5, pch=17, col="blue")

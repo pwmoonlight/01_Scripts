@@ -71,7 +71,7 @@
 ### Prepare the working space
 ### -------------------------
 
-setwd("G:/000_Modeling_Working_Directory_000")
+setwd("E:/000_Modeling_Working_Directory_000")
 source(paste(getwd(), "/01_Scripts/Minor_Modules/1___Prepare_Working_Space.R", sep=""))
 
 
@@ -112,11 +112,53 @@ source(paste(getwd(), "/01_Scripts/01D____Combine_Data.R", sep=""))
 
 
 
-################################################################
-####----------------------- MODULE 2 -----------------------####
-################################################################
-######### - Remove Species with too few data points - ##########
-################################################################
+#######################################
+####----------- MODULE 2 ----------####
+#######################################
+######### - Clean the Data - ##########
+#######################################
+
+
+### Remove Data Points in states the species is not supposed to live in ###
+### ------------------------------------------------------------------- ###
+
+species <- sub(".csv", "", list.files("03_Modelling/04_Species_To_Model_Distribution_Data/Uncleaned", pattern=".csv", full.names=F, recursive=F))
+source(paste(getwd(), "/01_Scripts/Minor_Modules/9___Remove_Points_In_Wrong_States.R", sep=""))
+
+
+
+### Remove Data Points in states they are not stated to be in ###
+### --------------------------------------------------------- ###
+
+species <- sub(".csv", "", list.files("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_1", pattern=".csv", full.names=F, recursive=F))
+source(paste(getwd(), "/01_Scripts/Minor_Modules/10___Remove_Points_In_Incorrect_States.R", sep=""))
+
+
+
+### Remove Data Points with incorrect altitudes ###
+### ------------------------------------------- ###
+
+species <- sub(".csv", "", list.files("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_2", pattern=".csv", full.names=F, recursive=F))
+source(paste(getwd(), "/01_Scripts/Minor_Modules/11___Remove_Points_With_Incorrect_Altitudes.R", sep=""))
+
+
+### Remove Data Points with outwith Brazil ###
+### -------------------------------------- ###
+
+species <- sub(".csv", "", list.files("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_3", pattern=".csv", full.names=F, recursive=F))
+source(paste(getwd(), "/01_Scripts/Minor_Modules/12___Remove_Points_Outwith_Brazil.R", sep=""))
+
+
+### Remove Data Points with outwith Species' Range ###
+### ---------------------------------------------- ###
+species <- sub(".csv", "", list.files("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_4", pattern=".csv", full.names=F, recursive=F))
+source(paste(getwd(), "/01_Scripts/Minor_Modules/13___Remove_Points_Outwith_Species_Range.R", sep=""))
+
+
+### Remove Data Points with outwith Species' PCA Range ###
+### -------------------------------------------------- ###
+species <- sub(".csv", "", list.files("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_5", pattern=".csv", full.names=F, recursive=F))
+source(paste(getwd(), "/01_Scripts/Minor_Modules/13___Remove_Points_by_PCA_space.R", sep=""))
 
 
 
@@ -128,8 +170,8 @@ require(raster)
 ### ---------------------------------------------------- ###
 
 # Specify how many distribution points are necessary
-cutoff <- 10
-kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
+cutoff <- 5
+kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.asc")
 #kde_raster <- aggregate(kde_raster, 2)
 
 species <- sub(".csv", "", list.files("03_Modelling/04_Species_To_Model_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
@@ -139,6 +181,7 @@ for(x in 1:length(species)){
   
   # Read in that species' data and find unique points
   source(paste(getwd(), "/01_Scripts/Minor_Modules/2___Find_Unique_Species_Distribution_Data.R", sep=""))
+
   species_data <- species_data[rownames(species_data)[which(rownames(species_data)!="NA")],]
   
   # Remove species with fewer than 5 unique points
@@ -177,17 +220,15 @@ source(paste(getwd(), "/01_Scripts/03____Spatial_Filtering.R", sep=""))
 
 
 
-# Find the species
-species <- sub(".csv", "", list.files("03_Modelling/08_Species_To_Model_Non_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
-kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.tif")
-kde_raster <- aggregate(kde_raster, 2)
-
-
 ### Produce a biased and a non-biased background sample for each species ###
 ### -------------------------------------------------------------------- ###
 
+require(raster)
+kde_raster <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/KDE_Raster/kde_raster.asc")
+
 # Produce a background sample for each species
 # This involves producing both a non-biased and a biased background sample
+species <- sub(".csv", "", list.files("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 source(paste(getwd(), "/01_Scripts/04____Background_Samples.R", sep=""))
 #source(paste(getwd(), "/01_Scripts/04____Background_Samples_backwards.R", sep=""))
 
@@ -209,7 +250,7 @@ bg <- aggregate(bg, 2)
 source(paste(getwd(), "/01_Scripts/04____PCA.R", sep=""))
 
 # This line will need manual editing depending upon which variables are selected
-PCA <- c(6, 10, 12, 13, 14, 15, 16, 18, 22, 27, 28, 30, 33)
+PCA <- c(1, 6, 12, 13, 14, 15, 21, 26, 27, 28, 30, 31, 33)
 
 
 
@@ -230,27 +271,33 @@ require(raster)
 ### Run 4 models ###
 ### ------------ ###
 
-dir.create("03_Modelling/11_Models", showWarnings = F)
+dir.create("03_Modelling/11_models", showWarnings = F)
 require(dismo)
 
 bg <- lapply(list.files(path="000_GIS_LAYERS/Brazil_Masked_GIS_Layers", pattern="*.tif$", full.names = T), raster)
 # Usually you will have done a PCA by this point. Keep only those BG layers selected during the PCA  
 bg <- bg[PCA]
 bg <- stack(bg)
-bg <- aggregate(bg, 2)
+#bg <- aggregate(bg, 2)
 
 
 species <- sub(".csv", "", list.files("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 
 for(x in 1:length(species)){
-  writeLines(paste("\nWorking on ", species[[x]], " ..."))
   
-  species_data <- read.csv(paste("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))[,-1]
-  background_data <- read.csv(paste("03_Modelling/10_Background_Data/Biased/", species[[x]], ".csv", sep=""))[,-1]
+  if(!dir.exists(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], sep=""))){
+    dir.create(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], sep=""), showWarnings = F)
+    
+    writeLines(paste("\nWorking on ", species[[x]], " ..."))
   
-  source(paste(getwd(), "/01_Scripts/05d____Run_Model_Bias_Spatial_Filtering.R", sep=""))
+    species_data <- read.csv(paste("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))[,-1]
+    background_data <- read.csv(paste("03_Modelling/10_Background_Data/Biased/", species[[x]], ".csv", sep=""))[,-1]
   
+    source(paste(getwd(), "/01_Scripts/05d____Run_Model_Bias_Spatial_Filtering.R", sep=""))
+  }
 }
+
+
 rm(background_data, species_data, bg, kde_raster, model, PCA, x)
 
 
@@ -274,12 +321,14 @@ source(paste(getwd(), "/01_Scripts/07___Find_Model_CBIs.R", sep=""))
 ### Finds the model mean and creates a consensus models ###
 ### --------------------------------------------------- ### 
 
+species <- sub(".csv", "", list.dirs("03_Modelling/11_models/Bias_Spatial_Filtering", full.names=F, recursive=F))
 source(paste(getwd(), "/01_Scripts/Minor_Modules/6___Find_Consensus_Model.R", sep=""))
 
 
 ### Plots the model for visual check ###
 ### -------------------------------- ### 
 
+species <- substr(list.files("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering", full.names=F, recursive=F),1, nchar(list.files("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering", full.names=F, recursive=F))-4)
 source(paste(getwd(), "/01_Scripts/Minor_Modules/7___Plot_Models.R", sep=""))
 
 
@@ -364,27 +413,40 @@ rm(background_data, species_data, bg_bioclim, kde_raster, model, PCA, x, chosen_
 ##############################################
 
 
-
-nordeste <- readOGR("000_GIS_layers/nordeste.shp", layer="nordeste")
+nordeste <- raster("000_GIS_LAYERS/nordeste.tif")
 
 ### Mask the CHIRPS/MODIS models ###
 ### ---------------------------- ###
 
-species <- gsub(".{4}$", "", list.files("12_Thresholded_models", pattern="*.tif", full.names=F))
-dir.create("11a_Models_Masked_Nordeste", showWarnings = F)
+species <- gsub(".tif$", "", list.files("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering", pattern="*.tif", full.names=F))
+dir.create("03_Modelling/11a_Models_Masked_Nordeste", showWarnings = F)
 for(x in 1:length(species)){
-  model <- mask(raster(paste("11_models/Bias_Spatial_Filtering/", species[[x]], ".tif", sep="")), nordeste)
-  writeRaster(model, file=paste("11a_Models_Masked_Nordeste/", species[[x]], ".tif", sep=""))
+  if(!dir.exists(paste("03_Modelling/11a_Models_Masked_Nordeste/", species[[x]], sep=""))){
+    dir.create(paste("03_Modelling/11a_Models_Masked_Nordeste/", species[[x]], sep=""))
+    
+    model <-raster(paste("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering/", species[[x]], ".tif", sep=""))
+    model <- crop(model, nordeste)
+    model <- extend(model, nordeste)
+  
+    writeRaster(model, file=paste("03_Modelling/11a_Models_Masked_Nordeste/", species[[x]], ".tif", sep=""))
+  }
 }
 
 ### Mask the CHIRPS/MODIS models - with thresholding ###
 ### ------------------------------------------------ ###
 
-species <- gsub(".{4}$", "", list.files("12_Thresholded_models", pattern="*.tif", full.names=F))
-dir.create("12a_Thresholded_Models_Masked_Nordeste", showWarnings = F)
+species <- gsub(".tif$", "", list.files("03_Modelling/12_Thresholded_Models/", pattern="*.tif", full.names=F))
+dir.create("03_Modelling/12a_Thresholded_Models_Masked_Nordeste", showWarnings = F)
 for(x in 1:length(species)){
-  model <- mask(raster(paste("12_Thresholded_Models/", species[[x]], ".tif", sep="")), nordeste)
-  writeRaster(model, file=paste("12a_Thresholded_Models_Masked_Nordeste/", species[[x]], ".tif", sep=""))
+  if(!dir.exists(paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], sep=""))){
+    dir.create(paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], sep=""))
+    
+    model <- raster(paste("03_Modelling/12_Thresholded_Models/", species[[x]], ".tif", sep=""))
+    model <- crop(model, nordeste)
+    model <- extend(model, nordeste)
+    
+    writeRaster(model, file=paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], ".tif", sep=""))
+ }
 }
 
 
