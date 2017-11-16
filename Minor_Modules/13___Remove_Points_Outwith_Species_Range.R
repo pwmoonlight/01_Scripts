@@ -46,42 +46,46 @@ Reflora_Species <- read.csv("000_Species/Angiospermas_Flora do Brasil 2020_25 se
 
 
 for(x in 1:length(species)){
-  distribution_data <- read.csv(file=paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_4/", species[[x]], ".csv", sep=""), header=T, stringsAsFactors = F)[,-1]
-  dims <- dim(distribution_data)[1]
-  if(length(distribution_data[,1])>0){
+  if(!dir.exists(paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_5/", species[[x]], sep=""))){
+    dir.create(paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_5/", species[[x]], sep=""), showWarnings = F)
     
-    Reflora_Index  <- which(Reflora_Species$Species == species[[x]])
-    Reflora_States <- which(Reflora_Species[Reflora_Index,20:46]>0)
-    Reflora_States <- (colnames(Reflora_Species[20:46])[Reflora_States])
-    
-    Reflora_State_List <- StateRasters[which(BRA_ADM_States %in% Reflora_States)]
-    
-    # If there are no recorded states for the species, remove that species
-    if(length(Reflora_State_List) == 0){
-      distribution_data <- distribution_data[-c(1:length(distribution_data[,1])),]
-    }
-    
-    # If there is 1 recorded state for the species, remove records outwith that state
-    if(length(Reflora_State_List) == 1){
-      index <- which(is.na(extract(Reflora_State_List[[1]], SpatialPoints(distribution_data[,2:1]))))
-      if(length(index)>0){
-        distribution_data <- distribution_data[-index,]
+    distribution_data <- read.csv(file=paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_4/", species[[x]], ".csv", sep=""), header=T, stringsAsFactors = F)[,-1]
+    dims <- dim(distribution_data)[1]
+    if(length(distribution_data[,1])>0){
+      
+      Reflora_Index  <- which(Reflora_Species$Species == species[[x]])
+      Reflora_States <- which(Reflora_Species[Reflora_Index,20:46]>0)
+      Reflora_States <- (colnames(Reflora_Species[20:46])[Reflora_States])
+      
+      Reflora_State_List <- StateRasters[which(BRA_ADM_States %in% Reflora_States)]
+      
+      # If there are no recorded states for the species, remove that species
+      if(length(Reflora_State_List) == 0){
+        distribution_data <- distribution_data[-c(1:length(distribution_data[,1])),]
       }
-    }
     
-    # If there are many recorded states for the species, remove records outwith those states
-    if(length(Reflora_State_List) > 1){
-      Reflora_State_List$fun <- max
-      Reflora_State_List <- do.call(mosaic, Reflora_State_List)
-      index <- which(is.na(extract(Reflora_State_List, SpatialPoints(distribution_data[,2:1]))))
-      if(length(index)>0){
-        distribution_data <- distribution_data[-index,]
+      # If there is 1 recorded state for the species, remove records outwith that state
+      if(length(Reflora_State_List) == 1){
+        index <- which(is.na(extract(Reflora_State_List[[1]], SpatialPoints(distribution_data[,2:1]))))
+        if(length(index)>0){
+          distribution_data <- distribution_data[-index,]
+        }
       }
-    }
+    
+      # If there are many recorded states for the species, remove records outwith those states
+      if(length(Reflora_State_List) > 1){
+        Reflora_State_List$fun <- max
+        Reflora_State_List <- do.call(mosaic, Reflora_State_List)
+        index <- which(is.na(extract(Reflora_State_List, SpatialPoints(distribution_data[,2:1]))))
+        if(length(index)>0){
+          distribution_data <- distribution_data[-index,]
+        }
+      }
 
-  }
-  if(dim(distribution_data)[1]<dims){writeLines(paste(species[x], "now has", dims-dim(distribution_data)[1],"fewer points..."))}
-  if(length(distribution_data[,1])>0){
-    write.csv(distribution_data, file=paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_5/", species[[x]], ".csv", sep=""))
+    }
+    if(dim(distribution_data)[1]<dims){writeLines(paste(species[x], "now has", dims-length(distribution_data[,1]),"fewer points..."))}
+    if(length(distribution_data[,1])>0){
+      write.csv(distribution_data, file=paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_5/", species[[x]], ".csv", sep=""))
+    }
   }
 }

@@ -75,27 +75,21 @@ library(recluster)
 library(RColorBrewer)
 library(phytools)
 
+dir.create("06_Clustering", showWarnings = F)
+dir.create("06_Clustering/Dendrograms", showWarnings = F)
 
 ####################################################################################################################################
 # 2) Open and examine the presence-absence matrix representing species composition for each region identified by wombling,
 # regions are rows and species columns, 0 = absence and 1 = presence.
 ####################################################################################################################################
 
+pick.num.subgraphs <- 1592
+pick.index <- "SIM"
  
-sp.comp <- read.table("04_Wombling/SpeciesRegions_sim_3363.txt", header=T, sep=",", row.names=1)
+sp.comp <- read.table(paste("04_Wombling/SpeciesRegions_", pick.index, "_", pick.num.subgraphs,".txt", sep=""), header=T, sep=",", row.names=1)
 #convert data frame to matrix
 sp.comp <- as.matrix(sp.comp)
-#examine the resulting matrix
-head(sp.comp)
 dim(sp.comp)
-names(sp.comp)
-class(sp.comp)
-str(sp.comp)
-typeof(sp.comp)
-mode(sp.comp)
-rownames(sp.comp)
-is.matrix(sp.comp)
-
 
 ####################################################################################################################################
 # 3) Run cluster analysis. See: http://www.ecography.org/appendix/ecog-00444, the supplementary material for:
@@ -103,11 +97,12 @@ is.matrix(sp.comp)
 # an unbiased clustering procedure for beta-diversity turnover. Ecography, 36: 1070–1075. )
 ####################################################################################################################################
 
+sp.comp <- sp.comp[-which(rowSums(sp.comp)==0),]
+dim(sp.comp)
+
 #calculate dissimilarity matrix
 #dismat <- recluster.dist(sp.comp, dist="sorensen")
 dismat <- recluster.dist(sp.comp, dist="simpson")
-class(dismat)
-attributes(dismat)
 
 #examine frequency o zero values and ties
 recluster.hist(dismat)
@@ -116,16 +111,11 @@ recluster.hist(dismat)
 #dendrograms are resampled by reordering sites in the distance matrix ("dismat")
 dendrogram.100 <- recluster.cons(dismat, tr = 100, p = 1, dist = "simpson") 
 plot(dendrogram.100$cons)
-plot(dendrogram.100$cons, y.lim=c(1,100))
-plot(dendrogram.100$cons, y.lim=c(100,200))
-plot(dendrogram.100$cons, y.lim=c(1000,1200))
 plot(dendrogram.100$cons, type="fan", show.tip.label=F)
-plot(dendrogram.100$cons, type="fan", show.tip.label=F, x.lim=c(-1e-10,1e-10), y.lim=c(-1e-10,1e-10))
 plot(dendrogram.100$cons, type="radial", show.tip.label=F)
 
 #examine effect of row order bias on each node of the original dendrogram
 original.dendrogram.node.strength <- recluster.node.strength(sp.comp, dist = "simpson", tr = 100, levels = 6)
-str(original.dendrogram.node.strength)
 plot.phylo(original.dendrogram.node.strength$tree) 
 #plot.phylo(original.dendrogram.node.strength$tree, y.lim=c(1,100))
 #plot.phylo(original.dendrogram.node.strength$tree, y.lim=c(1000,1200))
@@ -137,12 +127,7 @@ nodelabels(round(original.dendrogram.node.strength$result))
 dendrogram.50 <- recluster.cons(dismat, tr = 100, p = 0.5, dist = "simpson")
 str(dendrogram.50$cons) 
 plot(dendrogram.50$cons)
-plot(dendrogram.50$cons, y.lim=c(1,100))
-plot(dendrogram.50$cons, y.lim=c(100,200))
-plot(dendrogram.50$cons, y.lim=c(100,200), x.lim=c(0,0.02))
-plot(dendrogram.50$cons, y.lim=c(1000,1200))
 plot(dendrogram.50$cons, type="fan", show.tip.label=F)
-plot(dendrogram.50$cons, type="fan", show.tip.label=F, x.lim=c(-1e-10,1e-10), y.lim=c(-1e-10,1e-10))
 #plot(dendrogram.50$cons, type="radial", show.tip.label=F)
 axisPhylo(1)
 #to understand how branch lengths are calculated in the consensus dendrogram,
@@ -151,14 +136,8 @@ axisPhylo(1)
 #save the 50% consensus dendrogram
 #setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets")
 #setwd("J:/Jimenez/Nicaragua_Biomes/Datasets")
-#save(dendrogram.50, file="SpeciesRegions408_TaxSim_dendrogram50_2017June25.RData")
-
-#load the 50% consensus dendrogram
-#setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets")
-#setwd("J:/Jimenez/Nicaragua_Biomes/Datasets")
-#load("SpeciesRegions408_TaxSim_dendrogram50_2017June25.RData")
-#load("SpeciesRegions1277_TaxSim_dendrogram50_2017July3.RData")
-#str(dendrogram.50$cons) 
+save(dendrogram.50, file=paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax",pick.index,"_dendrogram50.RData", sep=""))
+load(paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax",pick.index,"_dendrogram50.RData", sep=""))
 
 #perform multi-scale bootstrap of the 50% consensus dendrogram, by constructing 1000 (bootstrapped) consensus trees,
 #each made up of 100 resampled trees; the code below uses 10 bootstrap scales, in a sequence from x1 to x19 every x2;
@@ -170,15 +149,9 @@ multi.boot.dendrogram.50 <- recluster.multi(dendrogram.50$cons, sp.comp, tr=100,
 class(multi.boot.dendrogram.50)
 Sys.time() - ptm
 
-#save/read results from multi-scale bootstrap of the 50% consensus dendrogram
-#setwd("J:/Jimenez/Nicaragua_Biomes/Datasets")
-#setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets")
-#setwd("C:/Users/rvisitor/Desktop/clustering") 
-#write.table(multi.boot.dendrogram.50, file="MultiBootDendrogram50_TaxSim_Regions95_2017June24.txt", sep=",")
-#multi.boot.dendrogram.50 <- read.table("MultiBootDendrogram50_TaxSim_Regions95_2017June24.txt", sep=",", header=T)
-#write.table(multi.boot.dendrogram.50, file="MultiBootDendrogram50_TaxSim_Regions1277_2017June24.txt", sep=",")
-#multi.boot.dendrogram.50 <- read.table("MultiBootDendrogram50_TaxSim_Regions1277_2017June24.txt", sep=",", header=T)
-multi.boot.dendrogram.50 <- read.table("MultiBootDendrogram50_TaxSim_Regions408_2017June24.txt", header=T, sep=",")
+write.table(multi.boot.dendrogram.50, file=paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax", pick.index,"_MultiBootDendrogram50.txt"), sep=",")
+multi.boot.dendrogram.50 <- read.table(paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax", pick.index,"_MultiBootDendrogram50.txt", sep=""), header=T, sep=",")
+
 class(multi.boot.dendrogram.50)
 dim(multi.boot.dendrogram.50)
 head(multi.boot.dendrogram.50)
@@ -226,21 +199,8 @@ plot(height.nodes.90.boot.support, scale.nodes.90.boot.support,
 
 
 
-#examine support for different nodes  
-#idnodes.multi.boot.dendrogram.50 <- recluster.identify.nodes(multi.boot.dendrogram.50)
-#idnodes.multi.boot.dendrogram.50
-
-#examine results from multi-scale bootstrap of the 50% consensus dendrogram
-#recluster.plot(dendrogram.50$cons, multi.boot.dendrogram.50, 1, 3, id = idnodes.multi.boot.dendrogram.50$nodes, type="fan")
-#recluster.plot(dendrogram.50$cons, multi.boot.dendrogram.50, 1, 3, id = idnodes.multi.boot.dendrogram.50$nodes)
-#recluster.plot(dendrogram.50$cons, multi.boot.dendrogram.50, 1, 3, id = idnodes.multi.boot.dendrogram.50$nodes, direction="rightwards")
-#recluster.plot(dendrogram.50$cons, multi.boot.dendrogram.50, 1, 3, id = idnodes.multi.boot.dendrogram.50$nodes, direction="rightwards", y.lim=c(0,50))
-#recluster.plot(dendrogram.50$cons, multi.boot.dendrogram.50, 1, 3, id = idnodes.multi.boot.dendrogram.50$nodes, direction="rightwards", y.lim=c(0,10), x.lim=c(0,0.02))
-#nodelabels()
-#axis(1)
-
-setwd("C:/_transfer/Papers/Nicaragua_Biomes/Figures")
-pdf(file = "Dendrogram50_TaxSim_Regions408_2017June24.pdf", width=7, height=0.15*length(dendrogram.50$cons$tip.label))
+#setwd("C:/_transfer/Papers/Nicaragua_Biomes/Figures")
+pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs,".pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
 par(mar=c(1,1,1,1))
 plot.phylo(dendrogram.50$cons, show.tip.label=T, label.offset=0.001)
 axisPhylo(backward = T, line=-6)
@@ -249,11 +209,9 @@ dev.off()
 
 #setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets")
 #get region size
-SizeRegions <- read.table("SizeRegions408_TaxSim_2017June25.txt", header=T, sep=",")
-SizeRegions <- read.table("SizeRegions1277_TaxSim_2017June25.txt", header=T, sep=",")
-SizeRegions <- SizeRegions[,1]
+load(paste("04_Wombling/SizeRegions_", pick.index, "_", pick.num.subgraphs, ".R", sep=""))
 #get region coordinate extent
-load("CompCoor_408_150arc_SimBestModels_2017June13.RData")
+load(paste("04_Wombling/CompCoor_", pick.index, "_", pick.num.subgraphs, ".R", sep=""))
 
 extent.regions <- lapply(comp.coor, function(x) c(min(x[,1]), max(x[,1]), min(x[,2]), max(x[,2])))
 extent.regions <- unlist(lapply(extent.regions, function(x) paste(round(x[1:4],1), collapse=",")))
@@ -270,14 +228,10 @@ plot.phylo(dendrogram.50$cons, show.tip.label=F)
 axisPhylo(backward = T, line=0)
 axis(2)
 nodelabels(scale.nodes.90.boot.support, nodes.90.boot.support, frame = "circle", bg = "lightblue", col = "black", cex=0.5)
-dev.new()
-plot.phylo(dendrogram.50$cons, show.tip.label=T, y.lim=c(80,100), tip.color="transparent", label.offset=0.07)
-axisPhylo(backward = T, line=0)
-nodelabels(scale.nodes.90.boot.support, nodes.90.boot.support, frame = "circle", bg = "lightblue", col = "black", cex=1)
 tiplabels(alternative.tip.label, tip=1:length(dendrogram.50$cons$tip.label), adj = c(0, 0.5), frame = "none", col = "black", bg = "transparent")
 
-setwd("C:/_transfer/Papers/Nicaragua_Biomes/Figures")
-pdf(file = "Dendrogram50_TaxSim_Regions408_2017June24b.pdf", width=7, height=0.15*length(dendrogram.50$cons$tip.label))
+#setwd("C:/_transfer/Papers/Nicaragua_Biomes/Figures")
+pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs, "b.pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
 par(mar=c(1,1,1,1))
 plot.phylo(dendrogram.50$cons, show.tip.label=T, tip.color="transparent", label.offset=0.07)
 axisPhylo(backward = T, line=-6)
@@ -290,7 +244,7 @@ dev.off()
 #################
 
 #set node height threshold
-node.height.threshold <- 0.08
+node.height.threshold <- 0.2
 
 #graphically examine threshold on dendrogram
 plot.phylo(dendrogram.50$cons, show.tip.label=F)
@@ -298,12 +252,7 @@ axisPhylo(backward = T, line=0)
 nodelabels(scale.nodes.90.boot.support, nodes.90.boot.support, frame = "circle", bg = "lightblue", col = "black", cex=0.5)
 axis(2)
 abline(v=max(node.depth.edgelength(dendrogram.50$cons))-node.height.threshold, lty=1, col="red")
-plot.phylo(dendrogram.50$cons, show.tip.label=F, y.lim=c(380,400))
-axisPhylo(backward = T, line=0)
-nodelabels(scale.nodes.90.boot.support, nodes.90.boot.support, frame = "circle", bg = "lightblue", col = "black", cex=1)
-axis(2)
-abline(v=max(node.depth.edgelength(dendrogram.50$cons))-node.height.threshold, lty=1, col="red")
-#
+
 
 #determine how many and which nodes meet the threshold
 sum(height.nodes.90.boot.support<node.height.threshold)
@@ -405,15 +354,11 @@ axisPhylo(backward = T, line=0)
 #nodelabels(scale.nodes.90.boot.support, nodes.90.boot.support, frame = "circle", bg = "transparent", col = "black", cex=1)
 axis(2)
 abline(v=max(node.depth.edgelength(dendrogram.50$cons))-node.height.threshold, lty=1, col="red")
-plot.phylo(dendrogram.50$cons, show.tip.label=T, y.lim=c(370,408), tip.color=dendrogram.tip.color, edge.color=dendrogram.edge.color, edge.width=dendrogram.edge.width, label.offset=0.001)
-axisPhylo(backward = T, line=0)
 #nodelabels(scale.nodes.90.boot.support, nodes.90.boot.support, frame = "circle", bg = "transparent", col = "black", cex=1)
 
 
 
-
-setwd("C:/_transfer/Papers/Nicaragua_Biomes/Figures")
-pdf(file = "Dendrogram50_TaxSim_Regions408_008threshold_2017June24.pdf", width=7, height=0.15*length(dendrogram.50$cons$tip.label))
+pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs,"_", node.height.threshold, "threshold.pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
 par(mar=c(1,1,1,1))
 plot.phylo(dendrogram.50$cons, show.tip.label=T, tip.color=dendrogram.tip.color, edge.color=dendrogram.edge.color, edge.width=dendrogram.edge.width, label.offset=0.001)
 axisPhylo(backward = T, line=-6)
@@ -421,9 +366,7 @@ nodelabels(scale.nodes.90.boot.support, nodes.90.boot.support, frame = "circle",
 abline(v=max(node.depth.edgelength(dendrogram.50$cons))-node.height.threshold, lty=1, col="black")
 dev.off()
 
-#
-setwd("C:/_transfer/Papers/Nicaragua_Biomes/Figures")
-pdf(file = "Dendrogram50_TaxSim_Regions408_008threshold_2017June24b.pdf", width=7, height=0.15*length(dendrogram.50$cons$tip.label))
+pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs,"_", node.height.threshold, "thresholdb.pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
 par(mar=c(1,1,1,1))
 plot.phylo(dendrogram.50$cons, show.tip.label=T, tip.color="transparent", edge.color=dendrogram.edge.color, edge.width=dendrogram.edge.width, label.offset=0.07)
 axisPhylo(backward = T, line=-6)
@@ -438,9 +381,7 @@ dev.off()
 ####################################################################################################################################
 
 #read the raster of regions
-#setwd("C:/_transfer/Papers/Nicaragua_Biomes/Maps/Regions") #from Ivan's laptop
-#Nicaragua.mask.Regions <- raster("Nicaragua_408Regions_150arc_SimBestModels_2017June17.grd")
-#Nicaragua.mask.Regions <- raster("Nicaragua_1277Regions_150arc_SimBestModels_2017July14.grd")
+Nordeste.mask.Regions <- raster(paste("04_Wombling/Nordeste_", pick.index,"_", pick.num.subgraphs,"_Regions.grd", sep=""))
 
 
 raster.region.color <- rep(NA, times=length(dendrogram.50$cons$tip.label))
@@ -451,30 +392,19 @@ raster.region.color[as.numeric(dendrogram.50$cons$tip.label)] <- dendrogram.tip.
 
 
 #plot regions, broad scale
-plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F)
-plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F,
+plot(Nordeste.mask.Regions, col=raster.region.color, useRaster=T, legend=F)
+plot(Nordeste.mask.Regions, col=raster.region.color, useRaster=T, legend=F,
 xlab="Longitude", ylab="Longitude", cex.axis=1.4, cex.lab=1.5)
-#plot regions, narrower scale
-plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F, xlim=c(-87,-85), ylim=c(13,15))
-plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F, xlim=c(-87,-85), ylim=c(11,13))
-plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(10.5,13))
-plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(13,15.5))
-#plot regions, even narrower scale
-plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F, xlim=c(-84,-83.5), ylim=c(13.5,14))
-plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F, xlim=c(-84.5,-84), ylim=c(11.5,12))
 
 
-setwd("C:/_transfer/Papers/Nicaragua_Biomes/Figures")
-pdf(file = "Map_Dendrogram50_TaxSim_Regions408_008threshold_2017June24.pdf")
-plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F)
+dir.create("06_Clustering/Maps", showWarnings = F)
+
+pdf(file = paste("06_Clustering/Maps/Map_Dendrogram50_Tax", pick.index, "_Regions", pick.num.subgraphs, "_", node.height.threshold, "threshold.pdf", sep=""))
+plot(Nordeste.mask.Regions, col=raster.region.color, useRaster=T, legend=F)
 grid()
 dev.off()
 
 
-#plot terrestrial ecoregions
-setwd("C:/_transfer/Papers/Nicaragua_Biomes/Maps")
-ecoregions.terrestrial <- shapefile("TerrestrialEcoregionsNicaragua.shp")
-plot(ecoregions.terrestrial, col=raster.region.color)
 
 
 ####################################################################################################################################
@@ -482,12 +412,11 @@ plot(ecoregions.terrestrial, col=raster.region.color)
 ####################################################################################################################################
 
 
-setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets/Elevation - WORLDCLIM")
-#setwd("J:/Jimenez/Nicaragua_Biomes/Datasets/Elevation - WORLDCLIM")
-#setwd("H:/Jimenez/Nicaragua_Biomes/Datasets/Elevation - WORLDCLIM") # when working as R visitor
-topo.Nicaragua.mask.0 <- raster("elevation.tif")
-topo.Nicaragua.mask.0
-plot(topo.Nicaragua.mask.0, colNA="cyan2")
+topo.Nordeste.mask.0 <- raster("000_GIS_LAYERS/Brazil_Masked_GIS_Layers/alt/alt_at_MODIS_CHIRPS_res.tif")
+topo.Nordeste.mask.0 <- crop(topo.Nordeste.mask.0, Nordeste.mask.Regions)
+topo.Nordeste.mask.0 <- mask(topo.Nordeste.mask.0, Nordeste.mask.Regions)
+
+plot(topo.Nordeste.mask.0, colNA="black")
 
 
 #close all graphical devices, and then open two graphical devices
@@ -498,15 +427,15 @@ available.graphical.windows
 
 for(i in 1:length(tips.from.highest.nodes.threshold))
 {
-	dev.set(available.graphical.windows[1])
+	dev.set(available.graphical.windows[3])
 	zoom(dendrogram.50$cons, tips.from.highest.nodes.threshold[[i]], subtree = FALSE, 
 	col = regions.color[1+length(dendrogram.tips.not.clustered):length(regions.color)][i],
 	tip.color=regions.color[1+length(dendrogram.tips.not.clustered):length(regions.color)][i],
 	edge.width=1)
-	dev.set(available.graphical.windows[2])
+	dev.set(available.graphical.windows[4])
 	raster.region.color <- rep("gray70", times=length(dendrogram.50$cons$tip.label))
 	raster.region.color[tips.from.highest.nodes.threshold[[i]]] <- dendrogram.tip.color[tips.from.highest.nodes.threshold[[i]]]
-	plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F)
+	plot(Nordeste.mask.Regions, col=raster.region.color, useRaster=T, legend=F)
 	Sys.sleep(5)
 }
 
@@ -515,13 +444,13 @@ for(i in 1:length(tips.from.highest.nodes.threshold))
 
 for(i in 1:length(tips.from.highest.nodes.threshold))
 {
-	dev.set(available.graphical.windows[1])
+	dev.set(available.graphical.windows[3])
 	zoom(dendrogram.50$cons, tips.from.highest.nodes.threshold[[i]], subtree = FALSE, 
-	col = "red", tip.color="red",	edge.width=1, tip)
-	dev.set(available.graphical.windows[2])
+	col = "red", tip.color="red",	edge.width=1) #, tip)
+	dev.set(available.graphical.windows[4])
 	raster.region.color <- rep("gray70", times=length(dendrogram.50$cons$tip.label))
 	raster.region.color[tips.from.highest.nodes.threshold[[i]]] <- "red"
-	plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F,
+	plot(Nordeste.mask.Regions, col=raster.region.color, useRaster=T, legend=F,
 	main=paste("Cluster ", i, " of ", length(tips.from.highest.nodes.threshold), ", 90% bootstrap scale = ", scale.highest.nodes.threshold[i], ", node height = ", round(height.highest.nodes.threshold[i],3), sep=""))
 	Sys.sleep(3)
 }
@@ -533,16 +462,16 @@ dendrogram.50.alternative$tip.label <- unlist(lapply(strsplit(alternative.tip.la
 
 for(i in 1:length(tips.from.highest.nodes.threshold))
 {
-	dev.set(available.graphical.windows[1])
+	dev.set(available.graphical.windows[3])
 	zoom(dendrogram.50.alternative, tips.from.highest.nodes.threshold[[i]], subtree = F, 
 	col = "red", tip.color="red",	edge.width=1)
 	par(new=T)
 	par(mfcol=c(1,1))
 	title(paste("Cluster ", i, " of ", length(tips.from.highest.nodes.threshold), ", 90% bootstrap scale = ", scale.highest.nodes.threshold[i], ", node height = ", round(height.highest.nodes.threshold[i],3), sep=""))
-	dev.set(available.graphical.windows[2])
+	dev.set(available.graphical.windows[4])
 	raster.region.color <- rep("gray70", times=length(dendrogram.50$cons$tip.label))
 	raster.region.color[as.numeric(dendrogram.50$cons$tip.label[tips.from.highest.nodes.threshold[[i]]])] <- "red"
-	plot(Nicaragua.mask.Regions, col=raster.region.color, useRaster=T, legend=F)
+	plot(Nordeste.mask.Regions, col=raster.region.color, useRaster=T, legend=F)
 	Sys.sleep(9)
 }
 
@@ -552,23 +481,28 @@ for(i in 1:length(tips.from.highest.nodes.threshold))
 
 for(i in 1:length(tips.from.highest.nodes.threshold))
 {
-	dev.set(available.graphical.windows[1])
+	dev.set(available.graphical.windows[3])
 	par(mar=c(1,1,1,1))
 	zoom(dendrogram.50.alternative, tips.from.highest.nodes.threshold[[i]], subtree = F, 
 		col = "red", tip.color="red",	edge.width=1)
 	par(new=T)
 	par(mfcol=c(1,1))
 	title(paste("Cluster ", i, " of ", length(tips.from.highest.nodes.threshold), ", 90% bootstrap scale = ", scale.highest.nodes.threshold[i], ", node height = ", round(height.highest.nodes.threshold[i],3), sep=""))
-	dev.set(available.graphical.windows[2])
+	dev.set(available.graphical.windows[4])
 	raster.region.color <- rep("transparent", times=length(dendrogram.50$cons$tip.label))
 	raster.region.color[as.numeric(dendrogram.50$cons$tip.label[tips.from.highest.nodes.threshold[[i]]])] <- "red"
-	plot(topo.Nicaragua.mask.0, colNA="cyan2", box=T, axes=T, useRaster=T,
+	plot(topo.Nordeste.mask.0, colNA="black", box=T, axes=T, useRaster=T, col=gray.colors(100, start = 0.7, end = 1, gamma = 2.2, alpha = NULL),
 		xlab="Longitude", ylab="Latitude", horizontal=T,
 		legend.lab="Altitude (m)", legend.mar=-1,
 		smallplot= c(0.12,0.9,0.07,0.095), bigplot=c(0.12,0.9,0.33,0.99))
-	plot(Nicaragua.mask.Regions, col=raster.region.color, colNA="cyan2", useRaster=T, legend=F, add=T)
-	Sys.sleep(9)
+	plot(Nordeste.mask.Regions, col=raster.region.color, colNA="black", useRaster=T, legend=F, add=T)
+	Sys.sleep(5)
 }
+
+
+
+
+
 
 
 ##################################################

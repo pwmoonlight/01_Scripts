@@ -28,6 +28,8 @@ for(x in 1:length(BRA_ADM_States)){BRA_ADM_States[x] <- as.character(States[whic
 ### ----------------------------------------------------------------
 ### Load in a function for turning the state data into a raster file
 
+
+
 FunR<-function(r){
   ext<-raster(extent(r), nrow=(extent(r)[4]-extent(r)[3])/0.01, ncol=(extent(r)[2]-extent(r)[1])/0.01)
   crs(ext)<-crs(r)
@@ -59,27 +61,31 @@ for(x in length(BRA_ADM_States):1){
 ### Check Species Against These Rasters
 
 for(x in 1:length(species)){
-  distribution_data <- read.csv(file=paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_1/", species[[x]], ".csv", sep=""), header=T, stringsAsFactors = F)[,-1]
-  dims <- dim(distribution_data)[1]
-  if(length(distribution_data[,1])>0){
-    for(y in length(distribution_data[,1]):1){
-      if(!is.na(distribution_data[y,10])>0){
-        if(is.na(distribution_data[y,1])){distribution_data <- distribution_data[-y,]}
-        if(!is.na(distribution_data[y,1])){
-          if(distribution_data[y,10] %in% BRA_ADM_States){
-            if(nchar(distribution_data[y,10])>0){
-              index <- extract(StateRasters[[which(BRA_ADM_States==distribution_data[y,10])]],SpatialPoints(distribution_data[y,2:1]))
-              if(is.na(index)){distribution_data <- distribution_data[-y,]}
-              if(!is.na(index)){
-                if(index == 0){distribution_data <- distribution_data[-y,]}
+  if(!dir.exists(paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_2/", species[[x]], sep=""))){
+    dir.create(paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_2/", species[[x]], sep=""), showWarnings = F)
+    
+    distribution_data <- read.csv(file=paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_1/", species[[x]], ".csv", sep=""), header=T, stringsAsFactors = F)[,-1]
+    dims <- dim(distribution_data)[1]
+    if(length(distribution_data[,1])>0){
+      for(y in length(distribution_data[,1]):1){
+        if(!is.na(distribution_data[y,10])>0){
+          if(is.na(distribution_data[y,1])){distribution_data <- distribution_data[-y,]}
+          if(!is.na(distribution_data[y,1])){
+            if(distribution_data[y,10] %in% BRA_ADM_States){
+              if(nchar(distribution_data[y,10])>0){
+                index <- extract(StateRasters[[which(BRA_ADM_States==distribution_data[y,10])]],SpatialPoints(distribution_data[y,2:1]))
+                if(is.na(index)){distribution_data <- distribution_data[-y,]}
+                if(!is.na(index)){
+                  if(index == 0){distribution_data <- distribution_data[-y,]}
+                }
               }
             }
           }
         }
       }
+      if(dim(distribution_data)[1]<dims){writeLines(paste(species[x], "now has", dims-length(distribution_data[,1]),"fewer points..."))}
+      write.csv(distribution_data, file=paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_2/", species[[x]], ".csv", sep=""))
     }
-    if(dim(distribution_data)[1]<dims){writeLines(paste(species[x], "now has", dims-dim(distribution_data[1]),"fewer points..."))}
-    write.csv(distribution_data, file=paste("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_2/", species[[x]], ".csv", sep=""))
   }
 }
 

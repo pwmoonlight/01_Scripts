@@ -1,10 +1,10 @@
 
 ###############################################################################################################
-  ###############################################################################################################
-    ###############################################################################################################
-      ######################### Script by Peter Moonlight, Tiina Sarkinen et al. 2017 ###############################
-    ###############################################################################################################
-  ###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+######################### Script by Peter Moonlight, Tiina Sarkinen et al. 2017 ###############################
+###############################################################################################################
+###############################################################################################################
 ###############################################################################################################
 
 
@@ -158,7 +158,7 @@ source(paste(getwd(), "/01_Scripts/Minor_Modules/13___Remove_Points_Outwith_Spec
 ### Remove Data Points with outwith Species' PCA Range ###
 ### -------------------------------------------------- ###
 species <- sub(".csv", "", list.files("03_Modelling/04_Species_To_Model_Distribution_Data/Cleaned_5", pattern=".csv", full.names=F, recursive=F))
-source(paste(getwd(), "/01_Scripts/Minor_Modules/13___Remove_Points_by_PCA_space.R", sep=""))
+source(paste(getwd(), "/01_Scripts/Minor_Modules/14___Remove_Points_by_PCA_space.R", sep=""))
 
 
 
@@ -181,7 +181,7 @@ for(x in 1:length(species)){
   
   # Read in that species' data and find unique points
   source(paste(getwd(), "/01_Scripts/Minor_Modules/2___Find_Unique_Species_Distribution_Data.R", sep=""))
-
+  
   species_data <- species_data[rownames(species_data)[which(rownames(species_data)!="NA")],]
   
   # Remove species with fewer than 5 unique points
@@ -190,7 +190,7 @@ for(x in 1:length(species)){
   # Save a "model ready" csv file for species with enough data points
   if(length(species_data[,1])>cutoff){
     writeLines("   ...Sufficient Presence Points")
-    unlink(paste("03_Modelling/04_Species_To_Model_Distribution_Data/", species[[x]],".csv", sep=""))
+    #unlink(paste("03_Modelling/04_Species_To_Model_Distribution_Data/", species[[x]],".csv", sep=""))
     write.csv(species_data, file=paste("03_Modelling/08_Species_To_Model_Non_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))
   }
 }
@@ -284,15 +284,14 @@ bg <- stack(bg)
 species <- sub(".csv", "", list.files("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data", pattern=".csv", full.names=F, recursive=F))
 
 for(x in 1:length(species)){
-  
   if(!dir.exists(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], sep=""))){
     dir.create(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], sep=""), showWarnings = F)
     
     writeLines(paste("\nWorking on ", species[[x]], " ..."))
-  
+    
     species_data <- read.csv(paste("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))[,-1]
     background_data <- read.csv(paste("03_Modelling/10_Background_Data/Biased/", species[[x]], ".csv", sep=""))[,-1]
-  
+    
     source(paste(getwd(), "/01_Scripts/05d____Run_Model_Bias_Spatial_Filtering.R", sep=""))
   }
 }
@@ -328,15 +327,7 @@ source(paste(getwd(), "/01_Scripts/Minor_Modules/6___Find_Consensus_Model.R", se
 ### Plots the model for visual check ###
 ### -------------------------------- ### 
 
-<<<<<<< HEAD
-species <- substr(list.files("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering", full.names=F, recursive=F),1, nchar(list.files("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering", full.names=F, recursive=F))-4)
-=======
-<<<<<<< HEAD
-species <- substr(list.files("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering", full.names=F, recursive=F),1, nchar(list.files("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering", full.names=F, recursive=F))-4)
-=======
-
->>>>>>> ff303605a6e19477b6f08ce833057f75dc4dc1ab
->>>>>>> 1fe41a805103cf4e6d7b88e73c371acf9c27d52d
+species <- gsub(".{4}$", "", list.files("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering/", pattern=".tif$", full.names=F, recursive=F))
 source(paste(getwd(), "/01_Scripts/Minor_Modules/7___Plot_Models.R", sep=""))
 
 
@@ -364,20 +355,6 @@ PCA_bioclim <- c(4,9,10,11,13,17,18)
 
 
 
-################################################################################
-####------------------------------ MODULE 5a -------------------------------####
-################################################################################
-######### - Perform a PCA to select bioclim environmental variables - ##########
-################################################################################
-
-
-source(paste(getwd(), "/01_Scripts/04____PCA_bioclim.R", sep=""))
-
-# This line will need manual editing depending upon which variables are selected
-PCA_bioclim <- c(4,9,10,11,13,17,18)
-
-
-
 ################################################
 ####--------------- MODULE 7 ---------------####
 ################################################
@@ -388,9 +365,6 @@ PCA_bioclim <- c(4,9,10,11,13,17,18)
 dir.create("14_Models_Bioclim", showWarnings = F)
 require(dismo)
 
-<<<<<<< HEAD
-bg_bioclim <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil Masked BIOCLIM", pattern="*3_degrees.tif$", full.names = T), raster)
-=======
 
 ### Read in the bioclim data ###
 ### ------------------------ ###
@@ -400,7 +374,6 @@ bg_bioclim <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil Masked 
 #bg_bioclim <- lapply(list.files(path="Y:/South America GIS/Brasil/Brazil Masked BIOCLIM", pattern="*3_degrees.tif$", full.names = T), raster)
 bg_bioclim <- lapply(list.files(path="000_GIS_LAYERS/Brazil Masked BIOCLIM", pattern="*3_degrees.tif$", full.names = T), raster)
 
->>>>>>> 05df30d7c27e26ba5ca13b66d316e101f9462003
 # Usually you will have done a PCA by this point. Keep only those BG layers selected during the PCA  
 bg_bioclim <- bg_bioclim[PCA_bioclim]
 bg_bioclim <- stack(bg_bioclim)
@@ -452,11 +425,14 @@ for(x in 1:length(species)){
     
     model <-raster(paste("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering/", species[[x]], ".tif", sep=""))
     model <- crop(model, nordeste)
-    model <- extend(model, nordeste)
-  
-    writeRaster(model, file=paste("03_Modelling/11a_Models_Masked_Nordeste/", species[[x]], ".tif", sep=""))
+    model <- mask(model, nordeste)
+    
+    writeRaster(model, file=paste("03_Modelling/11a_Models_Masked_Nordeste/", species[[x]], ".tif", sep=""), overwrite=T)
   }
 }
+
+
+nordeste <- raster("000_GIS_LAYERS/nordeste.tif")
 
 ### Mask the CHIRPS/MODIS models - with thresholding ###
 ### ------------------------------------------------ ###
@@ -469,11 +445,16 @@ for(x in 1:length(species)){
     
     model <- raster(paste("03_Modelling/12_Thresholded_Models/", species[[x]], ".tif", sep=""))
     model <- crop(model, nordeste)
-    model <- extend(model, nordeste)
+    model <- mask(model, nordeste)
     
-    writeRaster(model, file=paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], ".tif", sep=""))
- }
+    writeRaster(model, file=paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], ".tif", sep=""), overwrite=T)
+  }
 }
+
+# Plot for a visual check
+species <- gsub(".{4}$", "", list.files("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", pattern=".tif$", full.names=F, recursive=F))
+source(paste(getwd(), "/01_Scripts/Minor_Modules/8___Plot_Thresholded_Models.R", sep=""))
+
 
 
 ### Mask the bioclim models ###
