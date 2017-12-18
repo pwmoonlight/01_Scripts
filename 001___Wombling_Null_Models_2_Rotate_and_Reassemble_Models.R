@@ -17,7 +17,7 @@
 # 1) Load pakages, define working directories and the iterations to perform
 ############################################################################################################################
 
-setwd("G:/000_Modeling_Working_Directory_000")
+setwd("E:/000_Modeling_Working_Directory_000")
 source(paste(getwd(), "/01_Scripts/Minor_Modules/1___Prepare_Working_Space.R", sep=""))
 
 #load pakages
@@ -80,7 +80,7 @@ ptm <- Sys.time()
 dir.create("05_Wombling_Null_Models/02b_Null_Distributions", showWarnings = F)
 dir.create("05_Wombling_Null_Models/03_Null_Bricks", showWarnings = F)
 
-for(null.iterations in iterations.to.perform:1)
+for(null.iterations in 1:iterations.to.perform)
   {
   if(!file.exists(paste("05_Wombling_Null_Models/02b_Null_Distributions/", null.iterations, sep="")))
     {
@@ -88,7 +88,7 @@ for(null.iterations in iterations.to.perform:1)
     dir.create(paste("05_Wombling_Null_Models/03_Null_Bricks/", null.iterations, sep=""), showWarnings = F)
   	#the vector "final.j" will store the number of attempts needed to rotate the centroids of each species
   	final.j <- rep(NA, times=length(MCLUST.model.names)) 
-  	for(h in length(MCLUST.model.names):1)
+  	for(h in 1:length(MCLUST.model.names))
   	  {
 	    writeLines(paste("Iteration ", null.iterations, " of ", iterations.to.perform, ": Species ", h, " of ", length(MCLUST.model.names), ": ", MCLUST.model.names[[h]], sep=""))
       #load Mclust model and assign to:

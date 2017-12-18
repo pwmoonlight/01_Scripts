@@ -83,12 +83,20 @@ dir.create("06_Clustering/Dendrograms", showWarnings = F)
 # regions are rows and species columns, 0 = absence and 1 = presence.
 ####################################################################################################################################
 
-pick.num.subgraphs <- 264
-pick.index <- "SIM"
+pick.num.subgraphs <- 17908
+pick.index <- "SOR"
  
 sp.comp <- read.table(paste("04_Wombling/SpeciesRegions_", pick.index, "_", pick.num.subgraphs,".txt", sep=""), header=T, sep=",", row.names=1)
 #convert data frame to matrix
 sp.comp <- as.matrix(sp.comp)
+dim(sp.comp)
+
+load(paste("04_Wombling/SizeRegions_", pick.index,"_", pick.num.subgraphs, ".R", sep=""))
+
+removals <- which(SizeRegions==1)
+remainers <- 1:length(SizeRegions)
+remainers <- remainers[-removals]
+sp.comp <- sp.comp[-removals,]
 dim(sp.comp)
 
 ####################################################################################################################################
@@ -136,8 +144,8 @@ axisPhylo(1)
 #save the 50% consensus dendrogram
 #setwd("C:/_transfer/Papers/Nicaragua_Biomes/Datasets")
 #setwd("J:/Jimenez/Nicaragua_Biomes/Datasets")
-save(dendrogram.50, file=paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax",pick.index,"_dendrogram50.RData", sep=""))
-load(paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax",pick.index,"_dendrogram50.RData", sep=""))
+save(dendrogram.50, file=paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax",pick.index,"_dendrogram50_removals.RData", sep=""))
+load(paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax",pick.index,"_dendrogram50_removals.RData", sep=""))
 
 #perform multi-scale bootstrap of the 50% consensus dendrogram, by constructing 1000 (bootstrapped) consensus trees,
 #each made up of 100 resampled trees; the code below uses 10 bootstrap scales, in a sequence from x1 to x19 every x2;
@@ -149,8 +157,8 @@ multi.boot.dendrogram.50 <- recluster.multi(dendrogram.50$cons, sp.comp, tr=100,
 class(multi.boot.dendrogram.50)
 Sys.time() - ptm
 
-write.table(multi.boot.dendrogram.50, file=paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax", pick.index,"_MultiBootDendrogram50.txt"), sep=",")
-multi.boot.dendrogram.50 <- read.table(paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax", pick.index,"_MultiBootDendrogram50.txt", sep=""), header=T, sep=",")
+write.table(multi.boot.dendrogram.50, file=paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax", pick.index,"_MultiBootDendrogram50_removals.txt", sep=""), sep=",")
+multi.boot.dendrogram.50 <- read.table(paste("06_Clustering/Dendrograms/SpeciesRegions", pick.num.subgraphs,"_Tax", pick.index,"_MultiBootDendrogram50_removals.txt", sep=""), header=T, sep=",")
 
 class(multi.boot.dendrogram.50)
 dim(multi.boot.dendrogram.50)
@@ -200,7 +208,7 @@ plot(height.nodes.90.boot.support, scale.nodes.90.boot.support,
 
 
 #setwd("C:/_transfer/Papers/Nicaragua_Biomes/Figures")
-pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs,".pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
+pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs,"_removals.pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
 par(mar=c(1,1,1,1))
 plot.phylo(dendrogram.50$cons, show.tip.label=T, label.offset=0.001)
 axisPhylo(backward = T, line=-6)
@@ -213,14 +221,19 @@ load(paste("04_Wombling/SizeRegions_", pick.index, "_", pick.num.subgraphs, ".R"
 #get region coordinate extent
 load(paste("04_Wombling/CompCoor_", pick.index, "_", pick.num.subgraphs, ".R", sep=""))
 
+
+comp.coor <- comp.coor[-removals]
+SizeRegions <- SizeRegions[-removals]
+
+
 extent.regions <- lapply(comp.coor, function(x) c(min(x[,1]), max(x[,1]), min(x[,2]), max(x[,2])))
 extent.regions <- unlist(lapply(extent.regions, function(x) paste(round(x[1:4],1), collapse=",")))
 class(extent.regions)
 length(extent.regions)
-extent.regions[373]
+extent.regions[12]
 
 alternative.tip.label <- paste(1:length(extent.regions), SizeRegions, extent.regions, sep="|")
-alternative.tip.label <- alternative.tip.label[match(as.numeric(dendrogram.50$cons$tip.label), 1:length(extent.regions))]
+alternative.tip.label <- alternative.tip.label[match(as.numeric(dendrogram.50$cons$tip.label), remainers)]
 #check that labels match
 #cbind(alternative.tip.label, dendrogram.50$cons$tip.label)
 
@@ -231,7 +244,7 @@ nodelabels(scale.nodes.90.boot.support, nodes.90.boot.support, frame = "circle",
 tiplabels(alternative.tip.label, tip=1:length(dendrogram.50$cons$tip.label), adj = c(0, 0.5), frame = "none", col = "black", bg = "transparent")
 
 #setwd("C:/_transfer/Papers/Nicaragua_Biomes/Figures")
-pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs, "b.pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
+pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs, "b_removals.pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
 par(mar=c(1,1,1,1))
 plot.phylo(dendrogram.50$cons, show.tip.label=T, tip.color="transparent", label.offset=0.07)
 axisPhylo(backward = T, line=-6)
@@ -358,7 +371,7 @@ abline(v=max(node.depth.edgelength(dendrogram.50$cons))-node.height.threshold, l
 
 
 
-pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs,"_", node.height.threshold, "threshold.pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
+pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs,"_", node.height.threshold, "_threshold_removals.pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
 par(mar=c(1,1,1,1))
 plot.phylo(dendrogram.50$cons, show.tip.label=T, tip.color=dendrogram.tip.color, edge.color=dendrogram.edge.color, edge.width=dendrogram.edge.width, label.offset=0.001)
 axisPhylo(backward = T, line=-6)
@@ -366,7 +379,7 @@ nodelabels(scale.nodes.90.boot.support, nodes.90.boot.support, frame = "circle",
 abline(v=max(node.depth.edgelength(dendrogram.50$cons))-node.height.threshold, lty=1, col="black")
 dev.off()
 
-pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs,"_", node.height.threshold, "thresholdb.pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
+pdf(file = paste("06_Clustering/Dendrograms/Dendrogram50_Tax", pick.index,"_Regions", pick.num.subgraphs,"_", node.height.threshold, "_threshold_b_removals.pdf", sep=""), width=7, height=0.15*length(dendrogram.50$cons$tip.label))
 par(mar=c(1,1,1,1))
 plot.phylo(dendrogram.50$cons, show.tip.label=T, tip.color="transparent", edge.color=dendrogram.edge.color, edge.width=dendrogram.edge.width, label.offset=0.07)
 axisPhylo(backward = T, line=-6)
@@ -384,9 +397,16 @@ dev.off()
 Nordeste.mask.Regions <- raster(paste("04_Wombling/Nordeste_", pick.index,"_", pick.num.subgraphs,"_Regions.grd", sep=""))
 
 
-raster.region.color <- rep(NA, times=length(dendrogram.50$cons$tip.label))
+raster.region.color <- rep(NA, times=pick.num.subgraphs)
 raster.region.color[as.numeric(dendrogram.50$cons$tip.label)] <- dendrogram.tip.color
 
+# NA regions (i.e. transition zones) can be coloured here
+# Black
+# raster.region.color[is.na(raster.region.color)] <- "#000000"
+# White
+# raster.region.color[is.na(raster.region.color)] <- "#FFFFFF"
+# Grey
+ raster.region.color[is.na(raster.region.color)] <- "#CCCCCC"
 
 
 
@@ -399,7 +419,7 @@ xlab="Longitude", ylab="Longitude", cex.axis=1.4, cex.lab=1.5)
 
 dir.create("06_Clustering/Maps", showWarnings = F)
 
-pdf(file = paste("06_Clustering/Maps/Map_Dendrogram50_Tax", pick.index, "_Regions", pick.num.subgraphs, "_", node.height.threshold, "threshold.pdf", sep=""))
+pdf(file = paste("06_Clustering/Maps/Map_Dendrogram50_Tax", pick.index, "_Regions", pick.num.subgraphs, "_", node.height.threshold, "_threshold_removals.pdf", sep=""))
 plot(Nordeste.mask.Regions, col=raster.region.color, useRaster=T, legend=F)
 grid()
 dev.off()

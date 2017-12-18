@@ -42,13 +42,14 @@ for(x in 1:length(species)){
     model <- raster(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], "_", y+1, ".tif", sep=""))
     
     
-    #partitions <- read.csv(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], "/species_", y, "_samplePredictions.csv", sep=""))
-    #partitions.test <- partitions[which(partitions[,3] == "test"),]
+    partitions <- read.csv(paste("03_Modelling/11_models/Bias_Spatial_Filtering/", species[[x]], "/species_", y, "_samplePredictions.csv", sep=""))
+    partitions.test <- partitions[which(partitions[,3] == "test"),]
     
-    #partitions.test <- species_data[partitions.test[,1],]
+    partitions.test <- species_data[partitions.test[,1],]
     
-    #partitions.test <- extract(model, SpatialPoints(partitions.test[,2:1]))
-    partitions.test <- extract(model, species_data[,2:1])
+    partitions.test <- extract(model, SpatialPoints(partitions.test[,2:1]))
+
+    #partitions.test <- extract(model, species_data[,2:1])
     partitions.bg <- extract(model, SpatialPoints(background_data[,3:4]))
     
     

@@ -338,7 +338,6 @@ source(paste(getwd(), "/01_Scripts/Minor_Modules/7___Plot_Models.R", sep=""))
 
 source(paste(getwd(), "/01_Scripts/08___Thresholds_Models.R", sep=""))
 species <- gsub(".{4}$", "", list.files("03_Modelling/12_Thresholded_Models", pattern=".tif", full.names=F, recursive=F))
-source(paste(getwd(), "/01_Scripts/Minor_Modules/8___Plot_Thresholded_Models.R", sep=""))
 
 
 ################################################################################
