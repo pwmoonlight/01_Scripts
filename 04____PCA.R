@@ -47,7 +47,7 @@ rm(species_distribution_data, values, values_std, correlation, Bioclim_pca, pca_
 
 writeLines(paste("\n\n\n####################################################", sep=""))
 writeLines(paste("###              THE PCA HAS NOW RUN             ###", sep=""))
-writeLines(paste("### The Data is available in the '04_PCA' Folder ###", sep=""))
+writeLines(paste("### The Data is available in the '98_PCA' Folder ###", sep=""))
 writeLines(paste("###     Manually Remove Extraneous Variables     ###", sep=""))
 writeLines(paste("####################################################", sep=""))
 writeLines(paste("\n"))

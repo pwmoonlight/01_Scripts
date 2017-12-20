@@ -43,15 +43,13 @@ cell.adj <- read.table("04_Wombling/Cell_Links/cell_adj_150arc.txt", sep=",", he
 # 3) Create an R object of class "brick" with all species distribution models
 #############################################################################
 
-bricks <- gsub("Null_", "", list.files("05_Wombling_Null_Models/03_Null_Bricks", pattern="*.grd"))
-bricks <- gsub("_SDMb.grd", "", bricks)
-species.in.analysis <- read.csv("04_Wombling/species_in_analysis.txt", header=F)
+bricks <- 1:1000
 
 rasterOptions(datatype="LOG1S") #specify datatype (true/false or presence/absence) to efficiently save the brick file  
 
 # Create Folders in which to store the results
-dir.create("05_Wombling_Null_Models/04_Null_Beta_Diversity", showWarnings = F)
-lapply(bricks, function(x){dir.create(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", x, sep=""), showWarnings = F)})
+dir.create("05_Wombling_Null_Models/03_Null_Beta_Diversity", showWarnings = F)
+lapply(bricks, function(x){dir.create(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", x, sep=""), showWarnings = F)})
 
 ############################################################################################################################
 # 4) Read and examine the phylogeny for the species in the analysis (the "Nordeste phylogeny")
@@ -73,13 +71,17 @@ lapply(bricks, function(x){dir.create(paste("05_Wombling_Null_Models/04_Null_Bet
 ############################################################################################################################
 
 brick.index.species.in.phylogeny <- as.character(species.in.analysis[,1])
-SDM.b <- brick("04_wombling/SDM_brick.grd")
-brick.index.species.in.phylogeny <- which(names(SDM.b) %in% gsub(" ", "_", brick.index.species.in.phylogeny))
 
-for(x in 1:length(bricks)){
-  SDM.b <- brick(paste("05_Wombling_Null_Models/03_Null_Bricks/Null_", bricks[[x]], "_SDMb.grd", sep=""))
+species.in.analysis <-  list.files("05_Wombling_Null_Models/02b_Null_Distributions/1/", pattern="*.grd$")
+
+
+for(brick in 1:length(bricks)){
+  writeLines(paste("\nWorking on brick ", brick, " of ", length(bricks), sep=""))
+
+  writeLines(paste("...Creating Brick", sep=""))
+  SDM.b <- lapply(1:length(species.in.analysis), function(x){raster(paste("05_Wombling_Null_Models/02b_Null_Distributions/", brick, "/", species.in.analysis[[x]], sep=""))})
+  SDM.b <- stack(SDM.b)
   
-  writeLines(paste("\nWorking on brick ", x, " of ", length(bricks), sep=""))
   
   writeLines("...Calculating beta diversity")
   source(paste(getwd(), "/01_Scripts/Wombling Modules/01_SIM_and_SOR_diversity.R", sep=""))
@@ -120,14 +122,17 @@ for(x in 1:length(bricks)){
 #
 
 for(x in 1:length(bricks)){
-  SDM.b <- brick(paste("05_Wombling_Null_Models/03_Null_Bricks/Null_", bricks[[x]], "_SDMb.grd", sep=""))
-  writeLines(paste("\nWorking on brick ", x, " of ", length(bricks), sep=""))
+  writeLines(paste("\nWorking on brick ", brick, " of ", length(bricks), sep=""))
+  
+  writeLines(paste("...Creating Brick", sep=""))
+  SDM.b <- lapply(1:length(species.in.analysis), function(x){raster(paste("05_Wombling_Null_Models/02b_Null_Distributions/", brick, "/", species.in.analysis[[x]], sep=""))})
+  SDM.b <- stack(SDM.b)
   
 #read in the beta diversity measures
-  obs.beta.sim <- read.table(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim.csv", sep=""), sep=",", header=T)[,2]
-  obs.beta.sor <- read.table(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor.csv", sep=""), sep=",", header=T)[,2]
-  r.obs.beta.sim <- read.table(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim_ranked.csv", sep=""), sep=",", header=T)[,2]
-  r.obs.beta.sor <- read.table(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor_ranked.csv", sep=""), sep=",", header=T)[,2]
+  obs.beta.sim <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sim.csv", sep=""), sep=",", header=T)[,2]
+  obs.beta.sor <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sor.csv", sep=""), sep=",", header=T)[,2]
+  r.obs.beta.sim <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sim_ranked.csv", sep=""), sep=",", header=T)[,2]
+  r.obs.beta.sor <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sor_ranked.csv", sep=""), sep=",", header=T)[,2]
   
 #first create a matrix defining the edges:
   cell.adj.char <- cbind(as.character(cell.adj[,1]), as.character(cell.adj[,2]))
@@ -155,8 +160,8 @@ for(x in 1:length(bricks)){
     number.of.subgraphs.sor[i] <- components(delete_edges(Nordeste.graph.sor, candidate.boundary.elements.to.deploy.sor))$no
   }
   
-  write.csv(number.of.subgraphs.sim, file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim_number_of_subgraphs.csv", sep=""))
-  write.csv(number.of.subgraphs.sor, file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor_number_of_subgraphs.csv", sep=""))
+  write.csv(number.of.subgraphs.sim, file=paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sim_number_of_subgraphs.csv", sep=""))
+  write.csv(number.of.subgraphs.sor, file=paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sor_number_of_subgraphs.csv", sep=""))
 }
 
 
@@ -253,10 +258,10 @@ superfluidity.NULL.sim[superfluidity.NULL.sim==Inf] <- 200
 superfluidity.NULL.sor[superfluidity.NULL.sor==Inf] <- 200
 
 # Read in the emperical superfluidity values
-superfluidity.OBS.sim <- read.csv("04_Wombling/superfluiditySim.txt")
+superfluidity.OBS.sim <- read.csv("04_Wombling/SuperfluiditySim.txt")
 evaulation.number.of.subgraphs.sim <- superfluidity.OBS.sim[,1]
 superfluidity.OBS.sim <- superfluidity.OBS.sim[,2]
-superfluidity.OBS.sor <- read.csv("04_Wombling/superfluiditySor.txt")
+superfluidity.OBS.sor <- read.csv("04_Wombling/SuperfluiditySor.txt")
 evaulation.number.of.subgraphs.sor <- superfluidity.OBS.sor[,1]
 superfluidity.OBS.sor <- superfluidity.OBS.sor[,2]
 
@@ -265,23 +270,23 @@ superfluidity.OBS.sor <- superfluidity.OBS.sor[,2]
 #     PART 2 :- Plot the data
 ############################################################################################################################
 
-plot(evaluation.number.of.subgraphs.sim, superfluidity.NULL.sim[1,], type="l", col="gray70", 
-     bty="n", xlim=c(0, max(evaluation.number.of.subgraphs.sim)), ylim=c(0, max(superfluidity.NULL.sim)),
+plot(evaulation.number.of.subgraphs.sim, superfluidity.NULL.sim[1,], type="l", col="gray70", 
+     bty="n", xlim=c(0, max(evaulation.number.of.subgraphs.sim)), ylim=c(0, max(superfluidity.NULL.sim)),
      cex.axis=1.5, cex.lab=1.5, xlab="Evaluation number of subgraphs", ylab="superfluidity")
 for(i in 2:nrow(superfluidity.NULL.sim))
 {
-  points(evaluation.number.of.subgraphs.sim, superfluidity.NULL.sim[i,], type="l", col="gray70")
+  points(evaulation.number.of.subgraphs.sor, superfluidity.NULL.sim[i,], type="l", col="gray70")
 }
-points(evaluation.number.of.subgraphs.sim, superfluidity.OBS.sim, type="o", col="blue", lwd=2)
+points(evaulation.number.of.subgraphs.sim, superfluidity.OBS.sim, type="o", col="blue", lwd=2)
 
-plot(evaluation.number.of.subgraphs.sor, superfluidity.NULL.sor[1,], type="l", col="gray70", 
-     bty="n", xlim=c(0, max(evaluation.number.of.subgraphs.sor)), ylim=c(0, max(superfluidity.NULL.sor)),
+plot(evaulation.number.of.subgraphs.sor, superfluidity.NULL.sor[1,], type="l", col="gray70", 
+     bty="n", xlim=c(0, max(evaulation.number.of.subgraphs.sor)), ylim=c(0, max(superfluidity.NULL.sor)),
      cex.axis=1.5, cex.lab=1.5, xlab="Evaluation number of subgraphs", ylab="superfluidity")
 for(i in 2:nrow(superfluidity.NULL.sor))
 {
-  points(evaluation.number.of.subgraphs.sor, superfluidity.NULL.sor[i,], type="l", col="gray70")
+  points(evaulation.number.of.subgraphs.sor, superfluidity.NULL.sor[i,], type="l", col="gray70")
 }
-points(evaluation.number.of.subgraphs.sor, superfluidity.OBS.sor, type="o", col="blue", lwd=2)
+points(evaulation.number.of.subgraphs.sor, superfluidity.OBS.sor, type="o", col="blue", lwd=2)
 
 
 ############################################################################################################################

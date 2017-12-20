@@ -9,5 +9,5 @@
 r.obs.beta.sim <- rank(obs.beta.sim, ties.method="random")
 r.obs.beta.sor <- rank(obs.beta.sor, ties.method="random")
 
-write.csv(r.obs.beta.sim, file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim_ranked.csv", sep=""))
-write.csv(r.obs.beta.sor, file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor_ranked.csv", sep=""))
+write.csv(r.obs.beta.sim, file=paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sim_ranked.csv", sep=""))
+write.csv(r.obs.beta.sor, file=paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sor_ranked.csv", sep=""))

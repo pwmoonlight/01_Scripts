@@ -87,8 +87,8 @@
 # "NumberSubgraphsPhyloSorBestModels_150arc_2017June13", "NumberSubgraphsPhyloSimBestModels_150arc_2017June13.txt", 
 # 
 # - file withsuperfluidity values, derived from taxonomic and phylogenetic Sorensen's and Simpson's indexes:
-# "SuperfluitySimBestModels_150arc_2017June13.txt", "SuperfluitySorBestModels_150arc_2017June13.txt", 
-# "SuperfluityPhyloSorBestModels_150arc_2017June13.txt", "SuperfluityPhyloSimBestModels_150arc_2017June13.txt"
+# "superfluiditySimBestModels_150arc_2017June13.txt", "superfluiditySorBestModels_150arc_2017June13.txt", 
+# "superfluidityPhyloSorBestModels_150arc_2017June13.txt", "superfluidityPhyloSimBestModels_150arc_2017June13.txt"
 #
 ############################################################################################################################
 ############################################################################################################################
@@ -98,7 +98,7 @@
 # 1) Load needed pakages/Prepare Study Area
 ############################################################################################################################
 
-setwd("G:/000_Modeling_Working_Directory_000")
+setwd("E:/000_Modeling_Working_Directory_000")
 source(paste(getwd(), "/01_Scripts/Minor_Modules/1___Prepare_Working_Space.R", sep=""))
 
 library(sp)
@@ -106,6 +106,8 @@ library(raster)
 library(igraph)
 library(ape)
 library(RColorBrewer)
+
+dir.create("04_Wombling", showWarnings=F)
 
 
 ############################################################################################################################
@@ -118,14 +120,12 @@ library(RColorBrewer)
 # already available.
 ############################################################################################################################
 
-#create and plot the Nordeste raster mask that indicates the grid cells that have climate data,
-Nordeste.mask.0 <- raster(list.files("03_Modelling/12_Thresholded_Models", pattern="*.tif", full.names = T)[[1]])
-nordeste <- readOGR("000_GIS_LAYERS/nordeste.shp", layer="nordeste")
-Nordeste.mask.0 <- crop(Nordeste.mask.0, nordeste)
-Nordeste.mask.0 <- mask(Nordeste.mask.0, nordeste)
+
+
+
+#Read in an earlier mask if created earlier
+Nordeste.mask.0 <- raster("000_GIS_LAYERS/nordeste.tif")
 Nordeste.mask.0[Nordeste.mask.0[1:length(Nordeste.mask.0)]==1] <- 0
-writeRaster(Nordeste.mask.0, "000_GIS_LAYERS/nordeste.tif", overwrite=T)
-plot(Nordeste.mask.0)
 
 #examine the properties of the mask
 class(Nordeste.mask.0)
@@ -133,9 +133,6 @@ extent(Nordeste.mask.0)
 res(Nordeste.mask.0) #this is the resolution of the mask
 attributes(Nordeste.mask.0)
 str(Nordeste.mask.0)
-
-#Read in an earlier mask if created earlier
-Nordeste.mask.0 <- raster("000_GIS_LAYERS/nordeste.tif")
 
 #examine the total number of grid cells, the frequency of grid cells
 #that are NA and not-NA, and determine cell number (or cell ID) of
@@ -199,20 +196,10 @@ cell.adj <- read.table("04_Wombling/Cell_Links/cell_adj_150arc.txt", sep=",", he
 # 3) Create an R object of class "brick" with all species distribution models
 #############################################################################
 
-#read and examine the file with information on the species to be included in the analysis,
-#and the best performing SDM for each of those species:
+#list the modelled species with sufficiently high CBIs
 
-Sum.SDM.Perf <- read.table("03_Modelling/CBI_results.csv", header=T, sep=",")
-head(Sum.SDM.Perf)
+species.in.analysis <-  gsub(".tif$", "", list.files("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", pattern="*.tif$", full.names=F))
 
-#Remove any species form the analysis with CBI values < 0.5
-Sum.SDM.Perf <- Sum.SDM.Perf[Sum.SDM.Perf[,7] > 0.5,]
-
-#Remove any species form the analysis with AUC values < 0.75
-Sum.SDM.Perf <- Sum.SDM.Perf[Sum.SDM.Perf[,13] > 0.7,]
-
-species.in.analysis <- Sum.SDM.Perf[,1]
-species.in.analysis
 
 #save in a file the names of the species included in the analysis
 write.table(species.in.analysis, file="04_Wombling/species_in_analysis.txt", quote=T, sep=",", row.names=F, col.names=F)
@@ -220,7 +207,7 @@ write.table(species.in.analysis, file="04_Wombling/species_in_analysis.txt", quo
 #read the raster files with SDMs for the species to be included in the analysis, make sure
 #to use the correct directories within the loop
 
-species.level.dir <- lapply(1:length(species.in.analysis), function(x){raster(paste("03_Modelling/12_Thresholded_Models/", as.character(species.in.analysis)[[x]], ".tif", sep=""))})
+species.level.dir <- lapply(1:length(species.in.analysis), function(x){raster(paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", as.character(species.in.analysis)[[x]], ".tif", sep=""))})
 
 #create an R object of class "brick" with species distribution models for all species,
 #first create a list of the names of raster objects (with species distribution models)
@@ -230,12 +217,18 @@ for(i in 1:length(species.level.dir[]))
 {
   SDM.raster.names[[i]]  <- species.level.dir[[i]]@file@name
 }
+
+for(x in SDM.raster.names){eval(x)}
+
+SDM.b <- stack(species.level.dir)
+
+
 #now create the "brick"
-lapply(SDM.raster.names, eval) #checking this bit of code works
-length(lapply(SDM.raster.names, eval)) #checking it is of the right length
-SDM.b <- brick(lapply(SDM.raster.names, eval))
-SDM.b <- crop(SDM.b, nordeste)
-SDM.b <- mask(SDM.b, nordeste)
+#lapply(SDM.raster.names, eval) #checking this bit of code works
+#length(lapply(SDM.raster.names, eval)) #checking it is of the right length
+#SDM.b <- brick(lapply(SDM.raster.names, eval))
+#SDM.b <- crop(SDM.b, nordeste)
+#SDM.b <- mask(SDM.b, nordeste)
 #check the result
 class(SDM.b)
 res(SDM.b)
@@ -263,197 +256,199 @@ names(SDM.b)
 
 {
   
-# read and examine attributes of the Nordeste phylogeny
-#Nordeste.tree <- read.tree("intree.collapsed.dated.thorough.tre")
-#str(Nordeste.tree)
-#attributes(Nordeste.tree)
-#hist(Nordeste.tree$edge.length, breaks=100)
-#summary(Nordeste.tree$edge.length)
-#Nordeste.tree$edge
-#Nordeste.tree$tip.label
-#edgelabels()
-#Nordeste.tree$root.edge
-#node.depth.edgelength(Nordeste.tree)
-#max(node.depth.edgelength(Nordeste.tree))
-#summary(node.depth.edgelength(Nordeste.tree))
-#hist(node.depth.edgelength(Nordeste.tree), breaks=100)
-
-# change two phylogeny tip labels, so that all names are the same in the phylogeny and the brick with the species distribution models
-#Nordeste.tree$tip.label[Nordeste.tree$tip.label == "Antigonon_guatimalense"] <- "Antigonon_guatemalense"
-#Nordeste.tree$tip.label[Nordeste.tree$tip.label == "Stemmadenia_donnellsmithii"] <- "Stemmadenia_donnell-smithii"
-
-# plot the phylogeny
-# first a simple option
-#plot(Nordeste.tree, show.tip.label=FALSE)
-# another version of the plot
-#plot(Nordeste.tree, type="fan", cex=0.2, label.offset = 1,
-#     rotate.tree=196, open.angle=15)
-#axisPhylo(1, cex=1)
-# yet another version of the plot
-#par(mar= c(1, 1, 1, 1) + 0.1))
-#win.graph(20, 20, 10)
-#plot(Nordeste.tree, type="fan", cex=0.2, label.offset = 1,
-#     rotate.tree=196, open.angle=15)
-#axisPhylo(1, cex=1.5)
-#}
-
-############################################################################################################################
-# 5) Determine the subset of species included in the brick with the species distribution models that are
-# represented in the phylogeny.
-############################################################################################################################
-
-
-#species.in.analysis <- read.table("04_Wombling/species_in_analysis.txt", header=T, sep=",")
-#class(species.in.analysis)
-#class(species.in.analysis[,1])
-#class(species.in.analysis[,2])
-#dim(species.in.analysis)
-#species.in.analysis[1:5,]
-
-#species.genus <- 
-#  unlist(lapply(strsplit(as.vector(species.in.analysis[,1]), split=c(" "), fixed = T), function(x) paste(x[1], x[2], sep="_")))
-#class(species.genus)
-#species.genus[1:5]
-#length(species.genus)
-
-#create an index to select the species included in the brick that are represented in the phylogeny
-#brick.index.species.in.phylogeny <- which(!is.na(match(species.genus, Nordeste.tree$tip.label)))}
-
-
-############################################################################################################################
-# 6) Calculate beta-diversity for the spatial links created in section 2 above.
-############################################################################################################################
-
-############################################################################################################################
-# 6.1) Calculate taxonomic (i.e., species-based) beta-diversity using Simpson's and Sorensen's indices
-############################################################################################################################
-
-brick.index.species.in.phylogeny <- names(SDM.b)
-
-# Obtain, for all pairs of adjacent grid cells, terms to calculate beta-diversity.
-# First, using a matrix indicate:
-# species are unique to one of the grid cells, represented as "0",
-# species unique to the other grid cell, represented as "Inf",
-# and shared species, represented as a "1".
-obs.beta.terms <-  SDM.b[cell.adj[,1]][,brick.index.species.in.phylogeny] / SDM.b[cell.adj[,2]][,brick.index.species.in.phylogeny]
-dim(obs.beta.terms)
-
-# Next, for all pairs of adjacent grid cells, calculate the following terms, see page 254 in
-# Legendre and Legendre (2010, Numerical Ecology, Second Edition):
-# the number of shared species 
-a <- rowSums(obs.beta.terms>0.5 & obs.beta.terms<1.5, na.rm=T)
-summary(a)
-# the number of unique species in one of the grid cells 
-b <- rowSums(obs.beta.terms<0.5, na.rm=T)
-summary(b)
-# the number of unique species in the other grid cell
-c <- rowSums(is.infinite(obs.beta.terms))
-summary(c)
-
-# Calculate ecological distance using Sorensen's index
-# (see page 286, equation 7.56 in Legendre and Legendre (2010, Numerical Ecology, Second Edition):
-obs.beta.sor <- (b+c)/(2*a + b + c)
-obs.beta.sor[which(is.na(obs.beta.sor))] <- 0
-summary(obs.beta.sor)
-
-# Calculate ecological distance using Simpson's index
-# (see page 2230, equation 2 in Mouillot et al. (2013, Journal of Biogeography 40: 2228–2237):
-obs.beta.sim <- pmin(b,c)/(a + pmin(b,c))
-obs.beta.sim[which(is.na(obs.beta.sim))] <- 0
-summary(obs.beta.sim)
-
-# Graphically compare the Sorensen's and Simpson's indexes
-plot(obs.beta.sor, obs.beta.sim, bty="n", cex.axis=1.5, cex.lab=1.5)
-abline(0, 1, col="red")
-
-write.table(obs.beta.sor, file="04_Wombling/ObsBetaSor.txt", sep=",")
-write.table(obs.beta.sim, file="04_Wombling/ObsBetaSim.txt", sep=",")
-
-#read file with beta-diversity measured as taxonomic (i.e., species based) Sorensen's or Simpson's indices
-obs.beta.sor <- read.table("04_Wombling/ObsBetaSor.txt", header=T, sep=",")
-obs.beta.sim <- read.table("04_Wombling/ObsBetaSim.txt", header=T, sep=",")
-dim(obs.beta.sor)
-head(obs.beta.sor)
-obs.beta.sor[1:5,]
-obs.beta.sor <- obs.beta.sor[,1]
-obs.beta.sor[1:10]
-#
-dim(obs.beta.sim)
-head(obs.beta.sim)
-obs.beta.sim[1:5,]
-obs.beta.sim <- obs.beta.sim[,1]
-obs.beta.sim[1:10]
-
-
-############################################################################################################################
-# 6.2) Calculate phylogenetic beta-diversity using Simpson's and Sorensen's indices
-############################################################################################################################
-
-#{define the species list
-#species.list <- species.genus[brick.index.species.in.phylogeny]
-
-#create vectors needed in the loop to save results
-#obs.phylo.beta.sim <- rep(NA, times=nrow(cell.adj))
-#obs.phylo.beta.sor <- rep(NA, times=nrow(cell.adj))
-
-#for (i in 1: nrow(cell.adj))
-#{
-#  #determine which of the species included in the Nordeste phylogeny occur in the first grid cell
-#  species.1 <- species.list[as.logical(SDM.b.150arc[cell.adj[i,1]][,brick.index.species.in.phylogeny])]
-#  #identify the edges of the Nordeste phylogeny that join the species occurring in the first grid cell to their most recent common ancestor 
-#  edges.1 <- which.edge(Nordeste.tree, species.1)
-#  #determine which of the species included in the Nordeste phylogeny occur in the second grid cell
-#  species.2 <- species.list[as.logical(SDM.b.150arc[cell.adj[i,2]][,brick.index.species.in.phylogeny])]
-#  #determine the edges of the Nordeste phylogeny that join the species occurring in the second grid cell to their most recent common ancestor 
-#  edges.2 <- which.edge(Nordeste.tree, species.2)
-#  #create a list of the species included in the Nordeste phylogeny that occur in one or both of the grid cells,
-#  #avoiding duplication of species names
-#  species.tot <- unique(c(species.1, species.2))
-#  #determine the edges of the Nordeste phylogeny that join the species occurring in one or both of the grid cells to their most recent common ancestor
-#  edges.tot <- which.edge(Nordeste.tree, species.tot)
-#  #Calculate phylogenetic betadiversity, following equations 1-17 in Leprieur et al. (2012, Quantifying phylogenetic beta diversity: distinguishing
-#  #between ‘true’ turnover of lineages and phylogenetic diversity gradients. PLoS ONE 7(8): e42760. doi:10.1371/journal.pone.0042760).
-#  PDtot <- sum(Nordeste.tree$edge.length[unique(c(edges.1, edges.2))])
-#  PD1 <- sum(Nordeste.tree$edge.length[edges.1])
-#  PD2 <- sum(Nordeste.tree$edge.length[edges.2])
-#  a <- PD1+PD2-PDtot
-#  b <- PDtot-PD1
-#  c <- PDtot-PD2
-#  obs.phylo.beta.sim[i] <- min(b,c)/(a+min(b,c))
-#  obs.phylo.beta.sor[i] <- (b+c)/(2*a + b + c)
-#}
-
-#examine results
-#length(obs.phylo.beta.sim)
-#head(obs.phylo.beta.sim)
-#summary(obs.phylo.beta.sim)
-#length(obs.phylo.beta.sor)
-#head(obs.phylo.beta.sor)
-#summary(obs.phylo.beta.sor)
-
-#graphically compare the Sorensen's and Simpson's phylogenetic indexes
-#plot(obs.phylo.beta.sor, obs.phylo.beta.sim, bty="n", cex.axis=1.5, cex.lab=1.5)
-#abline(0, 1, col="red")
-
-#plot(sort(obs.phylo.beta.sim))
-#plot(sort(obs.phylo.beta.sor))
-
-#save file with phylogenetic beta-diversity as Sorensen's index
-#write.table(obs.phylo.beta.sor, file="ObsPhyloBetaSor_BestModels_150arc_2017June19.txt", sep=",")
-
-#read file with phylogenetic beta-diversity as Sorensen's index
-#obs.phylo.beta.sor <- read.table("ObsPhyloBetaSor_BestModels_150arc_2017June19.txt", header=T, sep=",")
-#dim(obs.phylo.beta.sor)
-#head(obs.phylo.beta.sor)
-#obs.phylo.beta.sor[1:5,]
-#obs.phylo.beta.sor <- obs.phylo.beta.sor[,1]
-#obs.phylo.beta.sor[1:10]
-
-#save file with phylogenetic beta-diversity as Simpson's index
-#write.table(obs.phylo.beta.sim, file="ObsPhyloBetaSim_BestModels_150arc_2017June19.txt", sep=",")
-
-#read file with phylogenetic beta-diversity as Simpson's index
-#obs.phylo.beta.sim <- read.table("ObsPhyloBetaSim_BestModels_150arc_2017June19.txt", header=T, sep=",")
+  # read and examine attributes of the Nordeste phylogeny
+  #Nordeste.tree <- read.tree("intree.collapsed.dated.thorough.tre")
+  #str(Nordeste.tree)
+  #attributes(Nordeste.tree)
+  #hist(Nordeste.tree$edge.length, breaks=100)
+  #summary(Nordeste.tree$edge.length)
+  #Nordeste.tree$edge
+  #Nordeste.tree$tip.label
+  #edgelabels()
+  #Nordeste.tree$root.edge
+  #node.depth.edgelength(Nordeste.tree)
+  #max(node.depth.edgelength(Nordeste.tree))
+  #summary(node.depth.edgelength(Nordeste.tree))
+  #hist(node.depth.edgelength(Nordeste.tree), breaks=100)
+  
+  # change two phylogeny tip labels, so that all names are the same in the phylogeny and the brick with the species distribution models
+  #Nordeste.tree$tip.label[Nordeste.tree$tip.label == "Antigonon_guatimalense"] <- "Antigonon_guatemalense"
+  #Nordeste.tree$tip.label[Nordeste.tree$tip.label == "Stemmadenia_donnellsmithii"] <- "Stemmadenia_donnell-smithii"
+  
+  # plot the phylogeny
+  # first a simple option
+  #plot(Nordeste.tree, show.tip.label=FALSE)
+  # another version of the plot
+  #plot(Nordeste.tree, type="fan", cex=0.2, label.offset = 1,
+  #     rotate.tree=196, open.angle=15)
+  #axisPhylo(1, cex=1)
+  # yet another version of the plot
+  #par(mar= c(1, 1, 1, 1) + 0.1))
+  #win.graph(20, 20, 10)
+  #plot(Nordeste.tree, type="fan", cex=0.2, label.offset = 1,
+  #     rotate.tree=196, open.angle=15)
+  #axisPhylo(1, cex=1.5)
+  #}
+  
+  ############################################################################################################################
+  # 5) Determine the subset of species included in the brick with the species distribution models that are
+  # represented in the phylogeny.
+  ############################################################################################################################
+  
+  
+  #species.in.analysis <- read.table("04_Wombling/species_in_analysis.txt", header=T, sep=",")
+  #class(species.in.analysis)
+  #class(species.in.analysis[,1])
+  #class(species.in.analysis[,2])
+  #dim(species.in.analysis)
+  #species.in.analysis[1:5,]
+  
+  #species.genus <- 
+  #  unlist(lapply(strsplit(as.vector(species.in.analysis[,1]), split=c(" "), fixed = T), function(x) paste(x[1], x[2], sep="_")))
+  #class(species.genus)
+  #species.genus[1:5]
+  #length(species.genus)
+  
+  #create an index to select the species included in the brick that are represented in the phylogeny
+  #brick.index.species.in.phylogeny <- which(!is.na(match(species.genus, Nordeste.tree$tip.label)))
+  
+  }
+  
+  
+  ############################################################################################################################
+  # 6) Calculate beta-diversity for the spatial links created in section 2 above.
+  ############################################################################################################################
+  
+  ############################################################################################################################
+  # 6.1) Calculate taxonomic (i.e., species-based) beta-diversity using Simpson's and Sorensen's indices
+  ############################################################################################################################
+  
+  brick.index.species.in.phylogeny <- names(SDM.b)
+  
+  # Obtain, for all pairs of adjacent grid cells, terms to calculate beta-diversity.
+  # First, using a matrix indicate:
+  # species are unique to one of the grid cells, represented as "0",
+  # species unique to the other grid cell, represented as "Inf",
+  # and shared species, represented as a "1".
+  obs.beta.terms <-  SDM.b[cell.adj[,1]][,brick.index.species.in.phylogeny] / SDM.b[cell.adj[,2]][,brick.index.species.in.phylogeny]
+  dim(obs.beta.terms)
+  
+  # Next, for all pairs of adjacent grid cells, calculate the following terms, see page 254 in
+  # Legendre and Legendre (2010, Numerical Ecology, Second Edition):
+  # the number of shared species 
+  a <- rowSums(obs.beta.terms>0.5 & obs.beta.terms<1.5, na.rm=T)
+  summary(a)
+  # the number of unique species in one of the grid cells 
+  b <- rowSums(obs.beta.terms<0.5, na.rm=T)
+  summary(b)
+  # the number of unique species in the other grid cell
+  c <- rowSums(is.infinite(obs.beta.terms))
+  summary(c)
+  
+  # Calculate ecological distance using Sorensen's index
+  # (see page 286, equation 7.56 in Legendre and Legendre (2010, Numerical Ecology, Second Edition):
+  obs.beta.sor <- (b+c)/(2*a + b + c)
+  obs.beta.sor[which(is.na(obs.beta.sor))] <- 0
+  summary(obs.beta.sor)
+  
+  # Calculate ecological distance using Simpson's index
+  # (see page 2230, equation 2 in Mouillot et al. (2013, Journal of Biogeography 40: 2228–2237):
+  obs.beta.sim <- pmin(b,c)/(a + pmin(b,c))
+  obs.beta.sim[which(is.na(obs.beta.sim))] <- 0
+  summary(obs.beta.sim)
+  
+  # Graphically compare the Sorensen's and Simpson's indexes
+  plot(obs.beta.sor, obs.beta.sim, bty="n", cex.axis=1.5, cex.lab=1.5)
+  abline(0, 1, col="red")
+  
+  write.table(obs.beta.sor, file="04_Wombling/ObsBetaSor.txt", sep=",")
+  write.table(obs.beta.sim, file="04_Wombling/ObsBetaSim.txt", sep=",")
+  
+  #read file with beta-diversity measured as taxonomic (i.e., species based) Sorensen's or Simpson's indices
+  obs.beta.sor <- read.table("04_Wombling/ObsBetaSor.txt", header=T, sep=",")
+  obs.beta.sim <- read.table("04_Wombling/ObsBetaSim.txt", header=T, sep=",")
+  dim(obs.beta.sor)
+  head(obs.beta.sor)
+  obs.beta.sor[1:5,]
+  obs.beta.sor <- obs.beta.sor[,1]
+  obs.beta.sor[1:10]
+  #
+  dim(obs.beta.sim)
+  head(obs.beta.sim)
+  obs.beta.sim[1:5,]
+  obs.beta.sim <- obs.beta.sim[,1]
+  obs.beta.sim[1:10]
+  
+  
+  ############################################################################################################################
+  # 6.2) Calculate phylogenetic beta-diversity using Simpson's and Sorensen's indices
+  ############################################################################################################################
+  
+  #{define the species list
+  #species.list <- species.genus[brick.index.species.in.phylogeny]
+  
+  #create vectors needed in the loop to save results
+  #obs.phylo.beta.sim <- rep(NA, times=nrow(cell.adj))
+  #obs.phylo.beta.sor <- rep(NA, times=nrow(cell.adj))
+  
+  #for (i in 1: nrow(cell.adj))
+  #{
+  #  #determine which of the species included in the Nordeste phylogeny occur in the first grid cell
+  #  species.1 <- species.list[as.logical(SDM.b.150arc[cell.adj[i,1]][,brick.index.species.in.phylogeny])]
+  #  #identify the edges of the Nordeste phylogeny that join the species occurring in the first grid cell to their most recent common ancestor 
+  #  edges.1 <- which.edge(Nordeste.tree, species.1)
+  #  #determine which of the species included in the Nordeste phylogeny occur in the second grid cell
+  #  species.2 <- species.list[as.logical(SDM.b.150arc[cell.adj[i,2]][,brick.index.species.in.phylogeny])]
+  #  #determine the edges of the Nordeste phylogeny that join the species occurring in the second grid cell to their most recent common ancestor 
+  #  edges.2 <- which.edge(Nordeste.tree, species.2)
+  #  #create a list of the species included in the Nordeste phylogeny that occur in one or both of the grid cells,
+  #  #avoiding duplication of species names
+  #  species.tot <- unique(c(species.1, species.2))
+  #  #determine the edges of the Nordeste phylogeny that join the species occurring in one or both of the grid cells to their most recent common ancestor
+  #  edges.tot <- which.edge(Nordeste.tree, species.tot)
+  #  #Calculate phylogenetic betadiversity, following equations 1-17 in Leprieur et al. (2012, Quantifying phylogenetic beta diversity: distinguishing
+  #  #between ‘true’ turnover of lineages and phylogenetic diversity gradients. PLoS ONE 7(8): e42760. doi:10.1371/journal.pone.0042760).
+  #  PDtot <- sum(Nordeste.tree$edge.length[unique(c(edges.1, edges.2))])
+  #  PD1 <- sum(Nordeste.tree$edge.length[edges.1])
+  #  PD2 <- sum(Nordeste.tree$edge.length[edges.2])
+  #  a <- PD1+PD2-PDtot
+  #  b <- PDtot-PD1
+  #  c <- PDtot-PD2
+  #  obs.phylo.beta.sim[i] <- min(b,c)/(a+min(b,c))
+  #  obs.phylo.beta.sor[i] <- (b+c)/(2*a + b + c)
+  #}
+  
+  #examine results
+  #length(obs.phylo.beta.sim)
+  #head(obs.phylo.beta.sim)
+  #summary(obs.phylo.beta.sim)
+  #length(obs.phylo.beta.sor)
+  #head(obs.phylo.beta.sor)
+  #summary(obs.phylo.beta.sor)
+  
+  #graphically compare the Sorensen's and Simpson's phylogenetic indexes
+  #plot(obs.phylo.beta.sor, obs.phylo.beta.sim, bty="n", cex.axis=1.5, cex.lab=1.5)
+  #abline(0, 1, col="red")
+  
+  #plot(sort(obs.phylo.beta.sim))
+  #plot(sort(obs.phylo.beta.sor))
+  
+  #save file with phylogenetic beta-diversity as Sorensen's index
+  #write.table(obs.phylo.beta.sor, file="ObsPhyloBetaSor_BestModels_150arc_2017June19.txt", sep=",")
+  
+  #read file with phylogenetic beta-diversity as Sorensen's index
+  #obs.phylo.beta.sor <- read.table("ObsPhyloBetaSor_BestModels_150arc_2017June19.txt", header=T, sep=",")
+  #dim(obs.phylo.beta.sor)
+  #head(obs.phylo.beta.sor)
+  #obs.phylo.beta.sor[1:5,]
+  #obs.phylo.beta.sor <- obs.phylo.beta.sor[,1]
+  #obs.phylo.beta.sor[1:10]
+  
+  #save file with phylogenetic beta-diversity as Simpson's index
+  #write.table(obs.phylo.beta.sim, file="ObsPhyloBetaSim_BestModels_150arc_2017June19.txt", sep=",")
+  
+  #read file with phylogenetic beta-diversity as Simpson's index
+  #obs.phylo.beta.sim <- read.table("ObsPhyloBetaSim_BestModels_150arc_2017June19.txt", header=T, sep=",")
 #dim(obs.phylo.beta.sim)
 #head(obs.phylo.beta.sim)
 #obs.phylo.beta.sim[1:5,]
@@ -489,13 +484,13 @@ length(unique(r.obs.beta))
 r.obs.beta[1:100]
 
 #define the percentiles of beta-diversity that will be evaluated against the null model
-beta.ranks.to.evaluate <- 35082 - round(35082*seq(0.05, 0.5, 0.05))
+beta.ranks.to.evaluate <- 14638 - round(14638*seq(0.05, 0.5, 0.05))
 
 plot(r.obs.beta, obs.beta, bty="n", cex.axis=1.5, cex.lab=1.5)
 abline(v= beta.ranks.to.evaluate, lty=3)
 abline(h= obs.beta[match(beta.ranks.to.evaluate, r.obs.beta)], lty=3)
 #
-plot(r.obs.beta, obs.beta, bty="n", cex.axis=1.5, cex.lab=1.5, xlim=c(6000,35082), ylim=c(0,0.1))
+plot(r.obs.beta, obs.beta, bty="n", cex.axis=1.5, cex.lab=1.5, xlim=c(6000,143638), ylim=c(0,0.1))
 abline(v= beta.ranks.to.evaluate, lty=3)
 abline(h= obs.beta[match(beta.ranks.to.evaluate, r.obs.beta)], lty=3)
 
@@ -508,8 +503,8 @@ write.table(r.obs.beta, file="04_Wombling/Rank_ObsBetaSim.txt", row.names=F)
 #write.table(r.obs.beta, file="04_Wombling/Rank_ObsPhyBetaSim.txt", row.names=F)
 
 #read ranks of observed beta values
-r.obs.beta <- read.table("04_Wombling/Rank_ObsBetaSor.txt", header=T, sep=",")
-r.obs.beta <- read.table("04_Wombling/Rank_ObsBetaSim.txt", header=T, sep=",")
+r.obs.beta <- read.table("04_Wombling/Rank_ObsBetaSor.txt", header=T, sep=",")[,1]
+r.obs.beta <- read.table("04_Wombling/Rank_ObsBetaSim.txt", header=T, sep=",")[,1]
 #r.obs.beta <- read.table("04_Wombling/Rank_ObsPhyBetaSor.txt", header=T, sep=",")
 #r.obs.beta <- read.table("04_Wombling/Rank_ObsPhyBetaSim", header=T, sep=",")
 class(r.obs.beta)
@@ -578,8 +573,8 @@ plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F, xlim=c(-87,-85), ylim
 plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(10.5,13))
 plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F, xlim=c(-85,-83), ylim=c(13,15.5))
 
-selected.quantile <- 0.99
-quantile(obs.beta, probs=selected.quantile)
+selected.quantile <- 0.95
+quantile(obs.beta[,1], probs=selected.quantile)
 values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta, probs=selected.quantile))
 values.at.above.quantile
 
@@ -637,8 +632,8 @@ is.connected(Nordeste.graph)
 #of subgraphs, which correspond to isolated regions (and potentially ecoregions).
 number.of.subgraphs <- rep(NA, times=length(obs.beta))
 plot(0, components(Nordeste.graph)$no, 
-     xlim=c(0, sum(obs.beta >= quantile(obs.beta, probs=0))),
-     ylim=c(15,50000),
+     xlim=c(0, sum(obs.beta[,1] >= quantile(obs.beta, probs=0))),
+     ylim=c(15,length(obs.beta[,1])),
      xlab="Candidate boundary elements deployed", ylab="Regions (or subgraphs)",
      pch=19, bty="n", cex.axis=1.5, cex.lab=1.5) 
 #
@@ -646,7 +641,7 @@ start.time <- Sys.time()
 # 
 for(i in 1:length(obs.beta))
 {
-  print(i/35082*100)
+  print(i/143638*100)
   candidate.boundary.elements.to.deploy <- which(r.obs.beta > (length(r.obs.beta)-i))
   number.of.subgraphs[i] <- components(delete_edges(Nordeste.graph, candidate.boundary.elements.to.deploy))$no
   #points(i, number.of.subgraphs[i], pch=19)
@@ -671,24 +666,24 @@ abline(v=match(50000, number.of.subgraphs), lty=3)
 abline(h=50000, lty=3)
 abline(v=30829, lty=3)
 abline(v=number.of.subgraphs[30829], col="red")
-abline(v=35082 - beta.ranks.to.evaluate, lty=3)
-abline(h=number.of.subgraphs[35082 - beta.ranks.to.evaluate], lty=3)
+abline(v=143638 - beta.ranks.to.evaluate, lty=3)
+abline(h=number.of.subgraphs[143638 - beta.ranks.to.evaluate], lty=3)
 
 plot(1:length(number.of.subgraphs), number.of.subgraphs, xlim=c(0,6385), ylim=c(0,1600),
      xlab="Candidate boundary elements deployed", ylab="Regions (or subgraphs)",
      pch=19, bty="n", cex.axis=1.5, cex.lab=1.5) 
-abline(v=35082 - beta.ranks.to.evaluate, lty=3)
-abline(h=number.of.subgraphs[35082 - beta.ranks.to.evaluate], lty=3)
+abline(v=143638 - beta.ranks.to.evaluate, lty=3)
+abline(h=number.of.subgraphs[143638 - beta.ranks.to.evaluate], lty=3)
 
 plot(1:length(number.of.subgraphs), number.of.subgraphs, xlim=c(400, 800), ylim=c(0,20),
      xlab="Candidate boundary elements deployed", ylab="Regions (or subgraphs)",
      pch=19, bty="n", cex.axis=1.5, cex.lab=1.5) 
-abline(v=35082 - beta.ranks.to.evaluate, lty=3)
+abline(v=143638 - beta.ranks.to.evaluate, lty=3)
 abline(v=match(pick.num.subgraphs, number.of.subgraphs), lty=3)
-abline(h=number.of.subgraphs[35082 - beta.ranks.to.evaluate], lty=3)
+abline(h=number.of.subgraphs[143638 - beta.ranks.to.evaluate], lty=3)
 
 #examine the number of regions (potential ecoregions or subgraphs) to evaluate against null models
-number.of.subgraphs[35082 - beta.ranks.to.evaluate]
+number.of.subgraphs[143638 - beta.ranks.to.evaluate]
 
 #save file with number of subgraphs, derived from the taxonomic (i.e, species based) or phylogenetic
 #versions of Sorensen's or Simpson's indices
@@ -698,8 +693,8 @@ write.table(number.of.subgraphs, file="04_Wombling/NumberSubgraphsSor.txt", sep=
 #write.table(number.of.subgraphs, file="NumberSubgraphsPhyloSims.txt", sep=",", row.names=F)
 
 #read file with number of subgraphs, derived from Sorensen's index
-number.of.subgraphs <- read.table("04_Wombling/NumberSubgraphsSor.txt", header=T, sep=",")
-number.of.subgraphs <- read.table("04_Wombling/NumberSubgraphsSim.txt", header=T, sep=",")
+number.of.subgraphs <- read.table("04_Wombling/NumberSubgraphsSor.txt", header=T, sep=",")[,1]
+number.of.subgraphs <- read.table("04_Wombling/NumberSubgraphsSim.txt", header=T, sep=",")[,1]
 #number.of.subgraphs <- read.table("NumberSubgraphsPhyloSor.txt", header=T, sep=",")
 #number.of.subgraphs <- read.table("NumberSubgraphsPhyloSim.txt", header=T, sep=",")
 head(number.of.subgraphs)
@@ -720,10 +715,10 @@ number.of.subgraphs[1:100]
 
 #define the percentiles of beta-diversity for whichsuperfluidity will be claculated,
 #if you have not done so in section 8 (above)
-beta.ranks.to.evaluate <- 35082 - round(35082*seq(0.05, 0.5, 0.05))
+beta.ranks.to.evaluate <- 143638 - round(143638*seq(0.05, 0.5, 0.05))
 
 #define the number of regions (potentially ecoregions or "subgraphs") for whichsuperfluidity will be calculated
-evaluation.number.of.subgraphs <- number.of.subgraphs[35082 - beta.ranks.to.evaluate]
+evaluation.number.of.subgraphs <- number.of.subgraphs[143638 - beta.ranks.to.evaluate]
 
 #check that all evaluation points exist in the vector "number.of.subgraphs"
 match(evaluation.number.of.subgraphs, number.of.subgraphs)  
@@ -731,14 +726,14 @@ sum(is.na(match(evaluation.number.of.subgraphs, number.of.subgraphs)))
 
 #calculatesuperfluidity
 start.time <- Sys.time()
-superfluity <- rep(NA, times=length(evaluation.number.of.subgraphs))
+superfluidity <- rep(NA, times=length(evaluation.number.of.subgraphs))
 plot(min(evaluation.number.of.subgraphs), 0,
      xlim=c(min(evaluation.number.of.subgraphs), max(evaluation.number.of.subgraphs)),
      ylim=c(0, 200), 
-     bty="n", xlab="Regions (or subgraphs)", ylab="Superfluity", cex.lab=1.5, cex.axis=1.5, type="n")
+     bty="n", xlab="Regions (or subgraphs)", ylab="superfluidity", cex.lab=1.5, cex.axis=1.5, type="n")
 for (j in evaluation.number.of.subgraphs)
 {
-  print(paste(which(evaluation.number.of.subgraphs == j), "of", length(evaluation.number.of.subgraphs), "at", Sys.time()))
+  writeLines(paste(which(evaluation.number.of.subgraphs == j), "of", length(evaluation.number.of.subgraphs), "at", Sys.time()))
   candidate.boundary.elements.to.delete <- which(r.obs.beta > (length(r.obs.beta) - match(j, number.of.subgraphs)))
   focal.graph <- delete_edges(Nordeste.graph, candidate.boundary.elements.to.delete)
   #focal.graph
@@ -755,44 +750,44 @@ difftime(Sys.time(), start.time, units="mins")
 #this procedure might take about 14 minutes, depending on which computer is used
 #
 #examine the results
-class(superfluity)
-length(superfluity)
-summary(superfluity)
+class(superfluidity)
+length(superfluidity)
+summary(superfluidity)
 
 #plot the results in linear scale
 plot(evaluation.number.of.subgraphs,superfluidity, pch=19,
      bty="n", cex.axis=1.5, cex.lab=1.5, type="o",
-     xlab="Regions (or subgraphs)", ylab="Superfluity")
+     xlab="Regions (or subgraphs)", ylab="superfluidity")
 
 #plot the results using a semi-log graph
-plot(evaluation.number.of.subgraphs, log(superfluity), pch=19,
+plot(evaluation.number.of.subgraphs, log(superfluidity), pch=19,
      bty="n", cex.axis=1.5, cex.lab=1.5, type="o",
-     xlab="Regions (or subgraphs)", ylab="Log (Superfluity)")
+     xlab="Regions (or subgraphs)", ylab="Log (superfluidity)")
 
 #plot the results using a log-log graph
-plot(log(evaluation.number.of.subgraphs), log(superfluity), pch=19,
+plot(log(evaluation.number.of.subgraphs), log(superfluidity), pch=19,
      bty="n", cex.axis=1.5, cex.lab=1.5, type="o",
-     xlab="Log (Regions (or subgraphs))", ylab="Log (Superfluity)")
+     xlab="Log (Regions (or subgraphs))", ylab="Log (superfluidity)")
 
 #write files withsuperfluidity values, derived from the taxonomic (i.e., species based) or phylogenetic
 #versions of Sorensen's or Simpson's indices
-write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/SuperfluitySor.txt", sep=",", row.names=F)
-#write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/SuperfluityPhyloSor.txt", sep=",", row.names=F)
-write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/SuperfluitySim.txt", sep=",", row.names=F)
-#write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/SuperfluityPhyloSim.txt", sep=",", row.names=F)
+write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/superfluiditySor.txt", sep=",", row.names=F)
+#write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/superfluidityPhyloSor.txt", sep=",", row.names=F)
+write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/superfluiditySim.txt", sep=",", row.names=F)
+#write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombling/superfluidityPhyloSim.txt", sep=",", row.names=F)
 
 #read file withsuperfluidity values, dderived from the taxonomic (i.e., species based) or phylogenetic
 #versions of Sorensen's or Simpson's indices
-#superfluity <- read.table("04_Wombling/SuperfluitySor.txt", header=T, sep=",")
-#superfluity <- read.table("04_Wombling/SuperfluityPhyloSor.txt", header=T, sep=",")
-#superfluity <- read.table("04_Wombling/SuperfluitySim.txt", header=T, sep=",")
-#superfluity <- read.table("04_Wombling/SuperfluityPhyloSim.txt", header=T, sep=",")
-head(superfluity)
-class(superfluity)
-length(superfluity)
-summary(superfluity)
+superfluidity <- read.table("04_Wombling/superfluiditySor.txt", header=T, sep=",")
+#superfluidity <- read.table("04_Wombling/superfluidityPhyloSor.txt", header=T, sep=",")
+superfluidity <- read.table("04_Wombling/superfluiditySim.txt", header=T, sep=",")
+#superfluidity <- read.table("04_Wombling/superfluidityPhyloSim.txt", header=T, sep=",")
+head(superfluidity)
+class(superfluidity)
+length(superfluidity)
+summary(superfluidity)
 evaluation.number.of.subgraphs <-superfluidity[,1]
-superfluity <-superfluidity[,2]
+superfluidity <-superfluidity[,2]
 
 
 ##################################################################################################
@@ -804,8 +799,8 @@ superfluity <-superfluidity[,2]
 ##################################################################################################
 
 #select the number of regions (potential ecoregions) or subgraphs to map
-number.of.subgraphs[35082 - beta.ranks.to.evaluate]
-pick.num.subgraphs <- 4147
+number.of.subgraphs[143638 - beta.ranks.to.evaluate]
+pick.num.subgraphs <- 376
 #make sure that the number you selected exists in the vector talling the number of subgraphs
 match(pick.num.subgraphs, number.of.subgraphs)
 
@@ -839,6 +834,7 @@ load(paste("04_Wombling/SizeRegions_SOR_", pick.num.subgraphs, ".R", sep=""))
 comp.coor <-  as.list (rep(NA, times=components(modified.Nordeste.graph)$no))
 for(j in 1:components(modified.Nordeste.graph)$no)
 {
+  print(j)
   comp.coor[[j]] <- xyFromCell(Nordeste.mask.0, as.numeric(names(components(modified.Nordeste.graph)$membership))[components(modified.Nordeste.graph)$membership==j], spatial=FALSE)
 }
 
@@ -854,6 +850,7 @@ load(paste("04_Wombling/CompCoor_SOR_", pick.num.subgraphs, ".R", sep=""))
 comp.cells <-  as.list (rep(NA, times=components(modified.Nordeste.graph)$no))
 for(j in 1:components(modified.Nordeste.graph)$no)
 {
+  writeLines(paste(j, " of ", components(modified.Nordeste.graph)$no))
   comp.cells[[j]] <- as.numeric(names(components(modified.Nordeste.graph)$membership))[components(modified.Nordeste.graph)$membership==j]
 }
 
@@ -865,8 +862,11 @@ Nordeste.mask.Regions
 summary(Nordeste.mask.Regions)
 
 #save the raster of regions or subgraphs
-writeRaster(Nordeste.mask.Regions, paste("04_Wombling/Nordeste_SIM_", pick.num.subgraphs,"_Regions.grd", sep=""))
+writeRaster(Nordeste.mask.Regions, paste("04_Wombling/Nordeste_SIM_", pick.num.subgraphs,"_Regions.grd", sep=""), overwrite=T)
 writeRaster(Nordeste.mask.Regions, paste("04_Wombling/Nordeste_SOR_", pick.num.subgraphs,"_Regions.grd", sep=""))
+#load the raster of regions or subgraphs
+Nordeste.mask.Regions <- raster(paste("04_Wombling/Nordeste_SIM_", pick.num.subgraphs,"_Regions.grd", sep=""))
+Nordeste.mask.Regions <- raster(paste("04_Wombling/Nordeste_SOR_", pick.num.subgraphs,"_Regions.grd", sep=""))
 
 ##################################################################################################
 # 12.2) Map the regions
@@ -898,10 +898,11 @@ plot(Nordeste.mask.0, col="white", useRaster=T, legend=F, ylim=c(-25,-12))
 #plot the mask, even narrower scale
 
 #create a matrix with the species composition for each region
-SpeciesRegions <- matrix(NA, nrow=pick.num.subgraphs, ncol=length(brick.index.species.in.phylogeny))
-for(i in 1:length(brick.index.species.in.phylogeny))
+SpeciesRegions <- matrix(NA, nrow=pick.num.subgraphs, ncol=length(SDM.raster.names))
+for(i in 1:length(species.in.analysis))
 {
-  SpeciesRegions[,i] <- zonal(raster(SDM.b, layer=brick.index.species.in.phylogeny[i]), Nordeste.mask.Regions, fun='sum', digits=0, na.rm=TRUE)[,2] 
+  writeLines(paste(i, " of ", length(species.in.analysis), sep=""))
+  SpeciesRegions[,i] <- zonal(raster(SDM.b, layer=i), Nordeste.mask.Regions, fun='sum', digits=0, na.rm=TRUE)[,2] 
 }
 #examine resulting matrix
 SpeciesRegions[1:5,1:5]
