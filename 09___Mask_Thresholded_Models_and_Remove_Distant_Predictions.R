@@ -10,17 +10,17 @@ species <- gsub(".tif$", "", list.files("03_Modelling/12_Thresholded_Models/", p
 dir.create("03_Modelling/12a_Thresholded_Models_Masked_Nordeste", showWarnings = F)
 for(x in 1:length(species)){
   if(!dir.exists(paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], sep=""))){
-    writeLines(paste("Working on", species[[x]]))
+    writeLines(paste("/nWorking on", species[[x]]))
     
     
     dir.create(paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], sep=""))
     
     model <- raster(paste("03_Modelling/12_Thresholded_Models/", species[[x]], ".tif", sep=""))
-    model[which(model[1:length(model)] == 0)] <- NA
+    #model[which(model[1:length(model)] == 0)] <- NA
 
     data <- SpatialPoints(read.csv(paste("03_Modelling/09_Species_To_Model_Scale_Corrected_Distribution_Data/", species[[x]], ".csv", sep=""))[,3:2])
     
-    circle <- circles(data, d=400000, lonlat=TRUE)
+    circle <- circles(data, d=100000, lonlat=TRUE)
     circle <- gUnaryUnion(circle@polygons)
     circle <- cellFromPolygon(model, circle)
     
@@ -47,7 +47,8 @@ for(x in 1:length(species)){
     index_ones <- which(model[1:length(model)] == 1)
 
     temp <- model
-    temp[which(temp[1:length(temp)] == 2)] <- NA
+    temp[which(temp[1:length(temp)] == 2)] <- 0
+    temp[which(temp[1:length(temp)] == 0)] <- NA
     temp <- boundaries(temp, type="inner", directions=8)
     
     circle <- xyFromCell(temp, which(temp[1:length(temp)]==1))
@@ -67,7 +68,8 @@ for(x in 1:length(species)){
 
       circle <- xyFromCell(model, index_ones)
       temp <- model
-      temp[which(temp[1:length(temp)] == 2)] <- NA
+      temp[which(temp[1:length(temp)] == 2)] <- 0
+      temp[which(temp[1:length(temp)] == 0)] <- NA
       temp <- boundaries(temp, type="inner", directions=8)
       circle <- xyFromCell(temp, which(temp[1:length(temp)]==1))
       circle <- circles(circle, d=100000, lonlat=TRUE)
