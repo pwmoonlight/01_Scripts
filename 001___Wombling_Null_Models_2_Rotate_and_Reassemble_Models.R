@@ -67,8 +67,11 @@ load(file=paste("04_Wombling/AOO.R", sep=""))
 
 
 MCLUST.model.names <- gsub(" ", "_", paste("MCLUST", species.in.analysis, sep="_"))
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 6ff54a3fb892df17ee488d1d7f2c1d623bbf171b
 
 ### Find any files that will have been renamed by this process
 ### These will need to be manually renamed before the next (very long!) stage
@@ -94,10 +97,17 @@ for(null.iterations in 1:iterations.to.perform)
   if(!file.exists(paste("05_Wombling_Null_Models/02b_Null_Distributions/", null.iterations, sep="")))
     {
     dir.create(paste("05_Wombling_Null_Models/02b_Null_Distributions/", null.iterations, sep=""), showWarnings = F)
+<<<<<<< HEAD
     #dir.create(paste("05_Wombling_Null_Models/03_Null_Bricks/", null.iterations, sep=""), showWarnings = F)
   	#the vector "final.j" will store the number of attempts needed to rotate the centroids of each species
   	final.j <- rep(NA, times=length(MCLUST.model.names)) 
   	for(h in length(MCLUST.model.names):1)
+=======
+    dir.create(paste("05_Wombling_Null_Models/03_Null_Bricks/", null.iterations, sep=""), showWarnings = F)
+  	#the vector "final.j" will store the number of attempts needed to rotate the centroids of each species
+  	final.j <- rep(NA, times=length(MCLUST.model.names)) 
+  	for(h in 1:length(MCLUST.model.names))
+>>>>>>> 6ff54a3fb892df17ee488d1d7f2c1d623bbf171b
   	  {
 	    writeLines(paste("Iteration ", null.iterations, " of ", iterations.to.perform, ": Species ", h, " of ", length(MCLUST.model.names), ": ", MCLUST.model.names[[h]], sep=""))
       #load Mclust model and assign to:
