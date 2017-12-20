@@ -11,10 +11,7 @@ require(rgdal)
 require(dismo)
 require(rgeos)
 require(raster)
-<<<<<<< HEAD
 require()
-=======
->>>>>>> 6ff54a3fb892df17ee488d1d7f2c1d623bbf171b
 
 dir.create("03_Modelling/05_Species_Circles", showWarnings=F)
 dir.create("03_Modelling/10_Background_Data", showWarnings=F)

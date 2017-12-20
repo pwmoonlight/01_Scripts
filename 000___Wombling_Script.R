@@ -198,11 +198,7 @@ cell.adj <- read.table("04_Wombling/Cell_Links/cell_adj_150arc.txt", sep=",", he
 
 #list the modelled species with sufficiently high CBIs
 
-<<<<<<< HEAD
 species.in.analysis <-  gsub(".tif$", "", list.files("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", pattern="*.tif$", full.names=F))
-=======
-species.in.analysis <-  gsub(".tif$", "", list.files("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", pattern="*.tif", full.names=F))
->>>>>>> 6ff54a3fb892df17ee488d1d7f2c1d623bbf171b
 
 
 #save in a file the names of the species included in the analysis
@@ -542,8 +538,8 @@ r.obs.beta[1:100]
 plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F)
 
 selected.quantile <- seq(0.95, 0.5, -0.05)
-quantile(obs.beta[,1], probs=selected.quantile[1])
-values.at.above.quantile <- sum(obs.beta[,1] >= quantile(obs.beta[,1], probs=selected.quantile[1]))
+quantile(obs.beta, probs=selected.quantile[1])
+values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta, probs=selected.quantile[1]))
 values.at.above.quantile
 
 flag.candidate.boundary.elements <- r.obs.beta > (length(r.obs.beta)-values.at.above.quantile)
@@ -551,7 +547,7 @@ sum(flag.candidate.boundary.elements)
 
 for(i in 1:length(selected.quantile))
 {
-  values.at.above.quantile <- sum(obs.beta[,1] >= quantile(obs.beta[,1], probs=selected.quantile[i]))
+  values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta, probs=selected.quantile[i]))
   flag.candidate.boundary.elements <- r.obs.beta > (length(r.obs.beta)-values.at.above.quantile)
 
   from.coor <- xyFromCell(Nordeste.mask.0, cell.adj[flag.candidate.boundary.elements,1], spatial=FALSE)
@@ -579,11 +575,7 @@ plot(Nordeste.mask.0, col="gray70", useRaster=T, legend=F, xlim=c(-85,-83), ylim
 
 selected.quantile <- 0.95
 quantile(obs.beta[,1], probs=selected.quantile)
-<<<<<<< HEAD
 values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta, probs=selected.quantile))
-=======
-values.at.above.quantile <- sum(obs.beta >= quantile(obs.beta[,1], probs=selected.quantile))
->>>>>>> 6ff54a3fb892df17ee488d1d7f2c1d623bbf171b
 values.at.above.quantile
 
 flag.candidate.boundary.elements <- r.obs.beta > (length(r.obs.beta)-values.at.above.quantile)
@@ -638,20 +630,16 @@ is.connected(Nordeste.graph)
 
 #run a loop to sequentially remove spatial links and count the resulting number
 #of subgraphs, which correspond to isolated regions (and potentially ecoregions).
-number.of.subgraphs <- rep(NA, times=length(obs.beta[,1]))
+number.of.subgraphs <- rep(NA, times=length(obs.beta))
 plot(0, components(Nordeste.graph)$no, 
-<<<<<<< HEAD
      xlim=c(0, sum(obs.beta[,1] >= quantile(obs.beta, probs=0))),
-=======
-     xlim=c(0, sum(obs.beta[,1] >= quantile(obs.beta[,1], probs=0))),
->>>>>>> 6ff54a3fb892df17ee488d1d7f2c1d623bbf171b
      ylim=c(15,length(obs.beta[,1])),
      xlab="Candidate boundary elements deployed", ylab="Regions (or subgraphs)",
      pch=19, bty="n", cex.axis=1.5, cex.lab=1.5) 
 #
 start.time <- Sys.time()
 # 
-for(i in 1:length(obs.beta[,1]))
+for(i in 1:length(obs.beta))
 {
   print(i/143638*100)
   candidate.boundary.elements.to.deploy <- which(r.obs.beta > (length(r.obs.beta)-i))
@@ -790,11 +778,7 @@ write.table(cbind(evaluation.number.of.subgraphs,superfluidity), file="04_Wombli
 
 #read file withsuperfluidity values, dderived from the taxonomic (i.e., species based) or phylogenetic
 #versions of Sorensen's or Simpson's indices
-<<<<<<< HEAD
 superfluidity <- read.table("04_Wombling/superfluiditySor.txt", header=T, sep=",")
-=======
-#superfluidity <- read.table("04_Wombling/superfluiditySor.txt", header=T, sep=",")
->>>>>>> 6ff54a3fb892df17ee488d1d7f2c1d623bbf171b
 #superfluidity <- read.table("04_Wombling/superfluidityPhyloSor.txt", header=T, sep=",")
 superfluidity <- read.table("04_Wombling/superfluiditySim.txt", header=T, sep=",")
 #superfluidity <- read.table("04_Wombling/superfluidityPhyloSim.txt", header=T, sep=",")
@@ -816,11 +800,7 @@ superfluidity <-superfluidity[,2]
 
 #select the number of regions (potential ecoregions) or subgraphs to map
 number.of.subgraphs[143638 - beta.ranks.to.evaluate]
-<<<<<<< HEAD
 pick.num.subgraphs <- 376
-=======
-pick.num.subgraphs <- 805
->>>>>>> 6ff54a3fb892df17ee488d1d7f2c1d623bbf171b
 #make sure that the number you selected exists in the vector talling the number of subgraphs
 match(pick.num.subgraphs, number.of.subgraphs)
 

@@ -436,31 +436,10 @@ nordeste <- raster("000_GIS_LAYERS/nordeste.tif")
 ### Mask the CHIRPS/MODIS models - with thresholding ###
 ### ------------------------------------------------ ###
 
-<<<<<<< HEAD
 
 ### Also remove dodgy bits of models far from species' known ranges
 
 source(paste(getwd(), "/01_Scripts/09___Mask_Thresholded_Models_and_Remove_Distant_Predictions.R", sep=""))
-
-# Plot for a visual check
-species <- gsub(".{4}$", "", list.files("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", pattern=".tif$", full.names=F, recursive=F))
-source(paste(getwd(), "/01_Scripts/Minor_Modules/8___Plot_Thresholded_Models.R", sep=""))
-
-=======
-species <- gsub(".tif$", "", list.files("03_Modelling/12_Thresholded_Models/", pattern="*.tif", full.names=F))
-dir.create("03_Modelling/12a_Thresholded_Models_Masked_Nordeste", showWarnings = F)
-for(x in 1:length(species)){
-  if(!dir.exists(paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], sep=""))){
-    dir.create(paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], sep=""))
-    
-    model <- raster(paste("03_Modelling/12_Thresholded_Models/", species[[x]], ".tif", sep=""))
-    model <- crop(model, nordeste)
-    model <- mask(model, nordeste)
-    
-    writeRaster(model, file=paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], ".tif", sep=""), overwrite=T)
-  }
-}
->>>>>>> 6ff54a3fb892df17ee488d1d7f2c1d623bbf171b
 
 # Plot for a visual check
 species <- gsub(".{4}$", "", list.files("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", pattern=".tif$", full.names=F, recursive=F))
