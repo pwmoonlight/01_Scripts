@@ -10,7 +10,7 @@ species <- gsub(".tif$", "", list.files("03_Modelling/12_Thresholded_Models/", p
 dir.create("03_Modelling/12a_Thresholded_Models_Masked_Nordeste", showWarnings = F)
 for(x in 1:length(species)){
   if(!dir.exists(paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], sep=""))){
-    writeLines(paste("/nWorking on", species[[x]]))
+    writeLines(paste("Working on", species[[x]]))
     
     
     dir.create(paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", species[[x]], sep=""))

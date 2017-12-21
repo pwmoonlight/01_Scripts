@@ -9,7 +9,9 @@
 dir.create("03_Modelling/11_models/Consensus", showWarnings=F)
 dir.create("03_Modelling/11_models/Consensus/Bias_Spatial_Filtering/", showWarnings=F)
 
-species <- sub(".csv", "", list.dirs("03_Modelling/11_models/Bias_Spatial_Filtering", full.names=F, recursive=F))
+CBIs <- read.csv("03_Modelling/CBI_results.csv", row.names = 1)
+CBIs <- CBIs[which(CBIs[,6] >= 0.5),]
+species <- rownames(CBIs)
 
 require(raster)
 

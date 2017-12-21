@@ -16,6 +16,10 @@ dir.create("03_Modelling/11_models/Plots/Bias_Spatial_Filtering", showWarnings=F
 BRA_ADM <- list.files("000_GIS_LAYERS/BRA_Adm_2/", pattern="[.]shp$", full.names=T)
 BRA_ADM <- readOGR(BRA_ADM[1])
 
+CBIs <- read.csv("03_Modelling/CBI_results.csv", row.names = 1)
+CBIs <- CBIs[which(CBIs[,6] >= 0.5),]
+species <- rownames(CBIs)
+
 
 for(x in 1:length(species)){
   
