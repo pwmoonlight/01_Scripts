@@ -198,7 +198,7 @@ cell.adj <- read.table("04_Wombling/Cell_Links/cell_adj_150arc.txt", sep=",", he
 
 #list the modelled species with sufficiently high CBIs
 
-species.in.analysis <-  gsub(".tif$", "", list.files("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", pattern="*.tif$", full.names=F))
+species.in.analysis <-  gsub("\\.", "-", gsub("_", " ", gsub("MCLUST_", "", gsub(".R$", "", list.files("05_Wombling_Null_Models/01_McClust/", pattern="*.R$", full.names=F)))))
 
 
 #save in a file the names of the species included in the analysis
@@ -236,14 +236,14 @@ dim(SDM.b)
 SDM.b
 
 #save in a file the brick with the species distribution models of all species in the analysis that has 30 arc seconds resolution
-rasterOptions(datatype="LOG1S") #specify datatype (true/false or presence/absence) to efficiently save the brick file  
-writeRaster(SDM.b, filename="04_Wombling/SDM_brick.grd", bandorder='BIL')
+#rasterOptions(datatype="LOG1S") #specify datatype (true/false or presence/absence) to efficiently save the brick file  
+#writeRaster(SDM.b, filename="04_Wombling/SDM_brick.grd", bandorder='BIL')
 
 #save in a file the brick with the species distribution models of all species in the analysis
 rasterOptions(datatype="LOG1S") #specify datatype (true/false or presence/absence) to efficiently save the brick file  
 
 #read the file that has the brick with the species distribution models of all species
-SDM.b <- brick("04_Wombling/SDM_brick.grd")
+#SDM.b <- brick("04_Wombling/SDM_brick.grd")
 SDM.b
 str(SDM.b)
 nlayers(SDM.b)
@@ -484,7 +484,7 @@ length(unique(r.obs.beta))
 r.obs.beta[1:100]
 
 #define the percentiles of beta-diversity that will be evaluated against the null model
-beta.ranks.to.evaluate <- 14638 - round(14638*seq(0.05, 0.5, 0.05))
+beta.ranks.to.evaluate <- length(obs.beta[,1]) - round(length(obs.beta[,1])*seq(0.05, 0.5, 0.05))
 
 plot(r.obs.beta, obs.beta, bty="n", cex.axis=1.5, cex.lab=1.5)
 abline(v= beta.ranks.to.evaluate, lty=3)
@@ -715,10 +715,10 @@ number.of.subgraphs[1:100]
 
 #define the percentiles of beta-diversity for whichsuperfluidity will be claculated,
 #if you have not done so in section 8 (above)
-beta.ranks.to.evaluate <- 143638 - round(143638*seq(0.05, 0.5, 0.05))
+beta.ranks.to.evaluate <- length(obs.beta) - round(length(obs.beta)*seq(0.05, 0.5, 0.05))
 
 #define the number of regions (potentially ecoregions or "subgraphs") for whichsuperfluidity will be calculated
-evaluation.number.of.subgraphs <- number.of.subgraphs[143638 - beta.ranks.to.evaluate]
+evaluation.number.of.subgraphs <- number.of.subgraphs[length(obs.beta) - beta.ranks.to.evaluate]
 
 #check that all evaluation points exist in the vector "number.of.subgraphs"
 match(evaluation.number.of.subgraphs, number.of.subgraphs)  
@@ -799,8 +799,8 @@ superfluidity <-superfluidity[,2]
 ##################################################################################################
 
 #select the number of regions (potential ecoregions) or subgraphs to map
-number.of.subgraphs[143638 - beta.ranks.to.evaluate]
-pick.num.subgraphs <- 376
+number.of.subgraphs[length(obs.beta[,1]) - beta.ranks.to.evaluate]
+pick.num.subgraphs <- 218
 #make sure that the number you selected exists in the vector talling the number of subgraphs
 match(pick.num.subgraphs, number.of.subgraphs)
 

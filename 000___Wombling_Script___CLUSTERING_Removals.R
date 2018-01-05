@@ -84,7 +84,7 @@ dir.create("06_Clustering/Dendrograms", showWarnings = F)
 ####################################################################################################################################
 
 pick.num.subgraphs <- 18318
-pick.index <- "SOR"
+pick.index <- "SIM"
  
 sp.comp <- read.table(paste("04_Wombling/SpeciesRegions_", pick.index, "_", pick.num.subgraphs,".txt", sep=""), header=T, sep=",", row.names=1)
 #convert data frame to matrix

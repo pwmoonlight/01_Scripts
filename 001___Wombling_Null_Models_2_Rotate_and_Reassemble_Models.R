@@ -89,7 +89,11 @@ ptm <- Sys.time()
 dir.create("05_Wombling_Null_Models/02b_Null_Distributions", showWarnings = F)
 #dir.create("05_Wombling_Null_Models/03_Null_Bricks", showWarnings = F)
 
-for(null.iterations in 1:iterations.to.perform)
+#define the iterations to perform
+iterations.to.perform <- 1000
+
+
+for(null.iterations in iterations.to.perform:1)
   {
   if(!file.exists(paste("05_Wombling_Null_Models/02b_Null_Distributions/", null.iterations, sep="")))
     {
