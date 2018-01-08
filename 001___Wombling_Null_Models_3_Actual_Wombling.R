@@ -70,34 +70,44 @@ lapply(bricks, function(x){dir.create(paste("05_Wombling_Null_Models/03_Null_Bet
 # 6.1) Calculate taxonomic (i.e., species-based) beta-diversity using Simpson's and Sorensen's indices
 ############################################################################################################################
 
-brick.index.species.in.phylogeny <- as.character(species.in.analysis[,1])
+species.in.analysis <- read.csv(file="04_Wombling/species_in_analysis.txt", sep=",", header=F)[,1]
+brick.index.species.in.phylogeny <- gsub("-", ".", gsub(" ", "_", as.character(species.in.analysis)))
 
-species.in.analysis <-  list.files("05_Wombling_Null_Models/02b_Null_Distributions/1/", pattern="*.grd$")
+bricks <- list.dirs("05_Wombling_Null_Models/02b_Null_Distributions", full.names=F, recursive=F)
+
+for(brick in bricks){
+ if(!dir.exists(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, sep=""))){
+   dir.create(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, sep=""))
+
+   writeLines(paste("\nWorking on brick ", brick, " of ", length(bricks), sep=""))
+
+   writeLines(paste("...Creating Brick", sep=""))
+   SDM.b <- lapply(1:length(species.in.analysis), function(x){raster(paste("05_Wombling_Null_Models/02b_Null_Distributions/", brick, "/", brick.index.species.in.phylogeny[[x]], "_NULL.gri", sep=""))})+
+   SDM.raster.names <- vector(mode = "list", length = length(SDM.b))
+   for(i in 1:length(SDM.b[]))
+   {
+     SDM.b[[i]]@data@names  <- brick.index.species.in.phylogeny[[i]]
+   }
+   for(x in SDM.raster.names){eval(x)}
+
+   writeLines(paste("...Stacking Brick", sep=""))
+   SDM.b <- stack(SDM.b)
+
+   writeLines("...Calculating beta diversity")
+   source(paste(getwd(), "/01_Scripts/Wombling Modules/01_SIM_and_SOR_diversity.R", sep=""))
+
+ ############################################################################################################################
+ # 6.2) Calculate phylogenetic beta-diversity using Simpson's and Sorensen's indices.
+ ############################################################################################################################
 
 
-for(brick in 1:length(bricks)){
-  writeLines(paste("\nWorking on brick ", brick, " of ", length(bricks), sep=""))
+ ############################################################################################################################
+ # 7) Rank the values of the beta-diversity metrics.
+ ############################################################################################################################
 
-  writeLines(paste("...Creating Brick", sep=""))
-  SDM.b <- lapply(1:length(species.in.analysis), function(x){raster(paste("05_Wombling_Null_Models/02b_Null_Distributions/", brick, "/", species.in.analysis[[x]], sep=""))})
-  SDM.b <- stack(SDM.b)
-  
-  
-  writeLines("...Calculating beta diversity")
-  source(paste(getwd(), "/01_Scripts/Wombling Modules/01_SIM_and_SOR_diversity.R", sep=""))
-
-############################################################################################################################
-# 6.2) Calculate phylogenetic beta-diversity using Simpson's and Sorensen's indices.
-############################################################################################################################
-
-
-############################################################################################################################
-# 7) Rank the values of the beta-diversity metrics.
-############################################################################################################################
-
-  writeLines("...Ranking beta diversity values")
-  source(paste(getwd(), "/01_Scripts/Wombling Modules/02_rank_SIM_and_SOR_diversity.R", sep=""))
-  
+   writeLines("...Ranking beta diversity values")
+   source(paste(getwd(), "/01_Scripts/Wombling Modules/02_rank_SIM_and_SOR_diversity.R", sep=""))
+ }
 }
   
 ############################################################################################################################
@@ -121,48 +131,64 @@ for(brick in 1:length(bricks)){
 #are spatial links between adjacent grid cells as defined in section 2.
 #
 
-for(x in 1:length(bricks)){
-  writeLines(paste("\nWorking on brick ", brick, " of ", length(bricks), sep=""))
-  
-  writeLines(paste("...Creating Brick", sep=""))
-  SDM.b <- lapply(1:length(species.in.analysis), function(x){raster(paste("05_Wombling_Null_Models/02b_Null_Distributions/", brick, "/", species.in.analysis[[x]], sep=""))})
-  SDM.b <- stack(SDM.b)
-  
-#read in the beta diversity measures
-  obs.beta.sim <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sim.csv", sep=""), sep=",", header=T)[,2]
-  obs.beta.sor <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sor.csv", sep=""), sep=",", header=T)[,2]
-  r.obs.beta.sim <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sim_ranked.csv", sep=""), sep=",", header=T)[,2]
-  r.obs.beta.sor <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sor_ranked.csv", sep=""), sep=",", header=T)[,2]
-  
-#first create a matrix defining the edges:
-  cell.adj.char <- cbind(as.character(cell.adj[,1]), as.character(cell.adj[,2]))
-  #
-#next define the graph
-  Nordeste.graph.sim <- graph_from_edgelist(cell.adj.char, directed = F)
-  Nordeste.graph.sor <- graph_from_edgelist(cell.adj.char, directed = F)
-  
-#run a loop to sequentially remove spatial links and count the resulting number
-#of subgraphs, which correspond to isolated regions (and potentially ecoregions).
-  number.of.subgraphs.sim <- rep(NA, times=length(obs.beta.sim))
-  number.of.subgraphs.sor <- rep(NA, times=length(obs.beta.sor))
-  #
-  start.time <- Sys.time()
-  # 
-  for(i in 1:length(obs.beta.sim))
-  {
-    percents <- round(length(obs.beta.sim)*seq(1, 0, -0.05))
-    if(i %in% percents){
-      writeLines(paste("... ", round(i/length(obs.beta.sim)*100, 0), "% at ", Sys.time(), sep=""))
+bricks <- list.dirs("05_Wombling_Null_Models/03_Null_Beta_Diversity", full.names=F, recursive=F)
+
+for(brick in bricks){
+  if(!dir.exists(paste("05_Wombling_Null_Models/04_Null_Number_of_Subgraphs/", brick, sep=""))){
+    dir.create(paste("05_Wombling_Null_Models/04_Null_Number_of_Subgraphs/", brick, sep=""))
+    
+    writeLines(paste("\nWorking on brick ", brick, " of ", length(bricks), sep=""))
+    writeLines(paste("...Creating Brick", sep=""))
+    SDM.b <- lapply(1:length(species.in.analysis), function(x){raster(paste("05_Wombling_Null_Models/02b_Null_Distributions/", brick, "/", brick.index.species.in.phylogeny[[x]], "_NULL.gri", sep=""))})
+    SDM.raster.names <- vector(mode = "list", length = length(SDM.b))
+
+    for(i in 1:length(SDM.b[]))
+    {
+      SDM.raster.names[[i]]  <- SDM.b[[i]]@file@name
     }
-    candidate.boundary.elements.to.deploy.sim <- which(r.obs.beta.sim > (length(r.obs.beta.sim)-i))
-    candidate.boundary.elements.to.deploy.sor <- which(r.obs.beta.sor > (length(r.obs.beta.sor)-i))
-    number.of.subgraphs.sim[i] <- components(delete_edges(Nordeste.graph.sim, candidate.boundary.elements.to.deploy.sim))$no
-    number.of.subgraphs.sor[i] <- components(delete_edges(Nordeste.graph.sor, candidate.boundary.elements.to.deploy.sor))$no
-  }
+    for(x in SDM.raster.names){eval(x)}
+
+    writeLines(paste("...Stacking Brick", sep=""))
+    SDM.b <- stack(SDM.b)
+
+    #read in the beta diversity measures
+    obs.beta.sim <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sim.csv", sep=""), sep=",", header=T)[,2]
+    obs.beta.sor <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sor.csv", sep=""), sep=",", header=T)[,2]
+    r.obs.beta.sim <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sim_ranked.csv", sep=""), sep=",", header=T)[,2]
+    r.obs.beta.sor <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sor_ranked.csv", sep=""), sep=",", header=T)[,2]
+
+    #first create a matrix defining the edges:
+    cell.adj.char <- cbind(as.character(cell.adj[,1]), as.character(cell.adj[,2]))
+
+    #next define the graph
+    Nordeste.graph.sim <- graph_from_edgelist(cell.adj.char, directed = F)
+    Nordeste.graph.sor <- graph_from_edgelist(cell.adj.char, directed = F)
   
-  write.csv(number.of.subgraphs.sim, file=paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sim_number_of_subgraphs.csv", sep=""))
-  write.csv(number.of.subgraphs.sor, file=paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[[x]], "/sor_number_of_subgraphs.csv", sep=""))
+    #run a loop to sequentially remove spatial links and count the resulting number
+    #of subgraphs, which correspond to isolated regions (and potentially ecoregions).
+
+    number.of.subgraphs.sim <- rep(NA, times=length(obs.beta.sim))
+    number.of.subgraphs.sor <- rep(NA, times=length(obs.beta.sor))
+
+    start.time <- Sys.time()
+
+    for(i in 1:length(obs.beta.sim))
+    {
+      percents <- round(length(obs.beta.sim)*seq(1, 0, -0.05))
+      if(i %in% percents){
+        writeLines(paste("... ", round(i/length(obs.beta.sim)*100, 0), "% at ", Sys.time(), sep=""))
+      }
+      candidate.boundary.elements.to.deploy.sim <- which(r.obs.beta.sim > (length(r.obs.beta.sim)-i))
+      candidate.boundary.elements.to.deploy.sor <- which(r.obs.beta.sor > (length(r.obs.beta.sor)-i))
+      number.of.subgraphs.sim[i] <- components(delete_edges(Nordeste.graph.sim, candidate.boundary.elements.to.deploy.sim))$no
+      number.of.subgraphs.sor[i] <- components(delete_edges(Nordeste.graph.sor, candidate.boundary.elements.to.deploy.sor))$no
+    }
+
+    write.csv(number.of.subgraphs.sim, file=paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sim_number_of_subgraphs.csv", sep=""))
+    write.csv(number.of.subgraphs.sor, file=paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sor_number_of_subgraphs.csv", sep=""))
+  }
 }
+
 
 
 
