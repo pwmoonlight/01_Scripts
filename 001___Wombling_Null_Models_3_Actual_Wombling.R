@@ -184,8 +184,8 @@ for(brick in bricks){
       number.of.subgraphs.sor[i] <- components(delete_edges(Nordeste.graph.sor, candidate.boundary.elements.to.deploy.sor))$no
     }
 
-    write.csv(number.of.subgraphs.sim, file=paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sim_number_of_subgraphs.csv", sep=""))
-    write.csv(number.of.subgraphs.sor, file=paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sor_number_of_subgraphs.csv", sep=""))
+    write.csv(number.of.subgraphs.sim, file=paste("05_Wombling_Null_Models/04_Null_Number_of_Subgraphs/", brick, "/sim_number_of_subgraphs.csv", sep=""))
+    write.csv(number.of.subgraphs.sor, file=paste("05_Wombling_Null_Models/04_Null_Number_of_Subgraphs/", brick, "/sor_number_of_subgraphs.csv", sep=""))
   }
 }
 
@@ -201,7 +201,6 @@ for(brick in bricks){
 
 #define the percentiles of beta-diversity for which superfluidity will be claculated,
 #if you have not done so in section 8 (above)
-beta.ranks.to.evaluate <- 35082 - round(35082*seq(0.05, 0.5, 0.05))
 
 number.of.subgraphs.sim <- read.csv("04_Wombling/NumberSubgraphsSim.txt")
 number.of.subgraphs.sor <- read.csv("04_Wombling/NumberSubgraphsSor.txt")
@@ -211,47 +210,54 @@ evaluation.number.of.subgraphs.sor <- read.csv("04_Wombling/superfluiditySor.txt
 cell.adj.char <- cbind(as.character(cell.adj[,1]), as.character(cell.adj[,2]))
 Nordeste.graph <- graph_from_edgelist(cell.adj.char, directed = F)
 
-for(x in 121:112){
-  writeLines(paste("brick ", x, " of ", length(bricks), sep=""))
-  null.number.of.subgraphs.sim <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim_number_of_subgraphs.csv", sep=""))
-  null.number.of.subgraphs.sor <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor_number_of_subgraphs.csv", sep=""))
+beta.ranks.to.evaluate <- length(number.of.subgraphs.sor[,1]) - round(length(number.of.subgraphs.sor[,1])*seq(0.05, 0.5, 0.05))
 
-  null.r.obs.beta.sim <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sim_ranked.csv", sep=""))[,2]
-  null.r.obs.beta.sor <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/sor_ranked.csv", sep=""))[,2]
-  
-  null.superfluidity.sim <- rep(NA, times=length(evaluation.number.of.subgraphs.sim))
-  null.superfluidity.sor <- rep(NA, times=length(evaluation.number.of.subgraphs.sor))
-  
-  Nordeste.graph.sim <- Nordeste.graph
-  Nordeste.graph.sor <- Nordeste.graph
-  
-  for(j in 1:length(evaluation.number.of.subgraphs.sim)){
-    writeLines(paste("...", j, "of", length(evaluation.number.of.subgraphs.sim), "at", Sys.time()))
-    candidate.boundary.elements.to.delete.sim <- which(null.r.obs.beta.sim > (length(null.r.obs.beta.sim) - match(evaluation.number.of.subgraphs.sim[[j]], null.number.of.subgraphs.sim[,2])))
-    candidate.boundary.elements.to.delete.sor <- which(null.r.obs.beta.sor > (length(null.r.obs.beta.sor) - match(evaluation.number.of.subgraphs.sor[[j]], null.number.of.subgraphs.sor[,2])))
+bricks <- list.dirs("05_Wombling_Null_Models/04_Null_Number_of_Subgraphs", full.names=F, recursive=F)
+
+for(brick in bricks){
+  if(!dir.exists(paste("05_Wombling_Null_Models/05_Null_Superfluidity/", brick, sep=""))){
+    dir.create(paste("05_Wombling_Null_Models/05_Null_Superfluidity/", brick, sep=""))
     
-    focal.graph.sim <- delete_edges(Nordeste.graph, candidate.boundary.elements.to.delete.sim)
-    focal.graph.sor <- delete_edges(Nordeste.graph, candidate.boundary.elements.to.delete.sor)
+    writeLines(paste("brick ", brick, " of ", length(bricks), sep=""))
+    null.number.of.subgraphs.sim <- read.csv(paste("05_Wombling_Null_Models/04_Null_Number_of_Subgraphs/", brick, "/sim_number_of_subgraphs.csv", sep=""))
+    null.number.of.subgraphs.sor <- read.csv(paste("05_Wombling_Null_Models/04_Null_Number_of_Subgraphs/", brick, "/sor_number_of_subgraphs.csv", sep=""))
+
+    null.r.obs.beta.sim <- read.csv(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sim_ranked.csv", sep=""))[,2]
+    null.r.obs.beta.sor <- read.csv(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sor_ranked.csv", sep=""))[,2]
+  
+    null.superfluidity.sim <- rep(NA, times=length(evaluation.number.of.subgraphs.sim))
+    null.superfluidity.sor <- rep(NA, times=length(evaluation.number.of.subgraphs.sor))
+  
+    Nordeste.graph.sim <- Nordeste.graph
+    Nordeste.graph.sor <- Nordeste.graph
+  
+    for(j in 1:length(evaluation.number.of.subgraphs.sim)){
+      writeLines(paste("...", j, "of", length(evaluation.number.of.subgraphs.sim), "at", Sys.time()))
+      candidate.boundary.elements.to.delete.sim <- which(null.r.obs.beta.sim > (length(null.r.obs.beta.sim) - match(evaluation.number.of.subgraphs.sim[[j]], null.number.of.subgraphs.sim[,2])))
+      candidate.boundary.elements.to.delete.sor <- which(null.r.obs.beta.sor > (length(null.r.obs.beta.sor) - match(evaluation.number.of.subgraphs.sor[[j]], null.number.of.subgraphs.sor[,2])))
     
-    necessary.edge.sim <- rep(NA, times=length(candidate.boundary.elements.to.delete.sim))
-    writeLines("   ...Working on Simpson")
-    for(i in 1:length(candidate.boundary.elements.to.delete.sim))
-    {
-      necessary.edge.sim[i] <- ifelse(components(add_edges(focal.graph.sim, cell.adj.char[candidate.boundary.elements.to.delete.sim[i],]))$no < components(focal.graph.sim)$no, 1, 0)
+      focal.graph.sim <- delete_edges(Nordeste.graph, candidate.boundary.elements.to.delete.sim)
+      focal.graph.sor <- delete_edges(Nordeste.graph, candidate.boundary.elements.to.delete.sor)
+    
+      necessary.edge.sim <- rep(NA, times=length(candidate.boundary.elements.to.delete.sim))
+      writeLines("   ...Working on Simpson")
+      for(i in 1:length(candidate.boundary.elements.to.delete.sim))
+      {
+        necessary.edge.sim[i] <- ifelse(components(add_edges(focal.graph.sim, cell.adj.char[candidate.boundary.elements.to.delete.sim[i],]))$no < components(focal.graph.sim)$no, 1, 0)
+      }
+      writeLines("   ...Working on Sorenson")
+      necessary.edge.sor <- rep(NA, times=length(candidate.boundary.elements.to.delete.sor))
+      for(i in 1:length(candidate.boundary.elements.to.delete.sor))
+      {
+        necessary.edge.sor[i] <- ifelse(components(add_edges(focal.graph.sor, cell.adj.char[candidate.boundary.elements.to.delete.sor[i],]))$no < components(focal.graph.sor)$no, 1, 0)
+      }
+      null.superfluidity.sim[j] <- sum(necessary.edge.sim<1)/sum(necessary.edge.sim>0)
+      null.superfluidity.sor[j] <- sum(necessary.edge.sor<1)/sum(necessary.edge.sor>0)
     }
-    writeLines("   ...Working on Sorenson")
-    necessary.edge.sor <- rep(NA, times=length(candidate.boundary.elements.to.delete.sor))
-    for(i in 1:length(candidate.boundary.elements.to.delete.sor))
-    {
-      necessary.edge.sor[i] <- ifelse(components(add_edges(focal.graph.sor, cell.adj.char[candidate.boundary.elements.to.delete.sor[i],]))$no < components(focal.graph.sor)$no, 1, 0)
-    }
-    null.superfluidity.sim[j] <- sum(necessary.edge.sim<1)/sum(necessary.edge.sim>0)
-    null.superfluidity.sor[j] <- sum(necessary.edge.sor<1)/sum(necessary.edge.sor>0)
+    write.csv(cbind(evaluation.number.of.subgraphs.sim, null.superfluidity.sim), file=paste("05_Wombling_Null_Models/05_Null_Superfluidity/", brick, "/superfluidity_sim.csv", sep=""))
+    write.csv(cbind(evaluation.number.of.subgraphs.sor, null.superfluidity.sor), file=paste("05_Wombling_Null_Models/05_Null_Superfluidity/", brick, "/superfluidity_sor.csv", sep=""))
   }
-  write.csv(cbind(evaluation.number.of.subgraphs.sim, null.superfluidity.sim), file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/superfluidity_sim.csv", sep=""))
-  write.csv(cbind(evaluation.number.of.subgraphs.sor, null.superfluidity.sor), file=paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[[x]], "/superfluidity_sor.csv", sep=""))
 }
-
 
 
 ############################################################################################################################
@@ -263,18 +269,18 @@ subgraphs.NULL.sim <- matrix(NA, nrow=length(bricks), ncol=35082)
 subgraphs.NULL.sor <- matrix(NA, nrow=length(bricks), ncol=35082)
 
 # Find those null bricks for which superfluidity has been calculated
-sims_w_superfluidity <- which(file.exists(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks, "/superfluidity_sim.csv", sep="")))
-sors_w_superfluidity <- which(file.exists(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks, "/superfluidity_sor.csv", sep="")))
+sims_w_superfluidity <- which(file.exists(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks, "/superfluidity_sim.csv", sep="")))
+sors_w_superfluidity <- which(file.exists(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks, "/superfluidity_sor.csv", sep="")))
 
 # Collate the superfluidity values into matrices
 superfluidity.NULL.sim <- matrix(NA, nrow=length(sims_w_superfluidity), ncol=10)
 superfluidity.NULL.sor <- matrix(NA, nrow=length(sors_w_superfluidity), ncol=10)
 
 for(x in 1:length(sims_w_superfluidity)){
-  superfluidity.NULL.sim[x,] <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[sims_w_superfluidity][[x]], "/superfluidity_sim.csv", sep=""))[,3]
+  superfluidity.NULL.sim[x,] <- read.csv(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[sims_w_superfluidity][[x]], "/superfluidity_sim.csv", sep=""))[,3]
 }
 for(x in 1:length(sors_w_superfluidity)){
-  superfluidity.NULL.sor[x,] <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[sors_w_superfluidity][[x]], "/superfluidity_sor.csv", sep=""))[,3]
+  superfluidity.NULL.sor[x,] <- read.csv(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[sors_w_superfluidity][[x]], "/superfluidity_sor.csv", sep=""))[,3]
 }
 
 
@@ -349,18 +355,18 @@ subgraphs.NULL.sim <- matrix(NA, nrow=length(bricks), ncol=35082)
 subgraphs.NULL.sor <- matrix(NA, nrow=length(bricks), ncol=35082)
 
 # Find those null bricks for which the number of subgraphs has been calculated
-sims_w_no_o_subgraphs <- which(file.exists(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks, "/sim_number_of_subgraphs.csv", sep="")))
-sors_w_no_o_subgraphs <- which(file.exists(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks, "/sor_number_of_subgraphs.csv", sep="")))
+sims_w_no_o_subgraphs <- which(file.exists(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks, "/sim_number_of_subgraphs.csv", sep="")))
+sors_w_no_o_subgraphs <- which(file.exists(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks, "/sor_number_of_subgraphs.csv", sep="")))
 
 # Collate the superfluidity values into matrices
 no.o.subgraphs.NULL.sim <- matrix(NA, nrow=length(sims_w_no_o_subgraphs), ncol=35082)
 no.o.subgraphs.NULL.sor <- matrix(NA, nrow=length(sors_w_no_o_subgraphs), ncol=35082)
 
 for(x in 1:length(sims_w_no_o_subgraphs)){
-  no.o.subgraphs.NULL.sim[x,] <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[sims_w_no_o_subgraphs][[x]], "/sim_number_of_subgraphs.csv", sep=""))[,2]
+  no.o.subgraphs.NULL.sim[x,] <- read.csv(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[sims_w_no_o_subgraphs][[x]], "/sim_number_of_subgraphs.csv", sep=""))[,2]
 }
 for(x in 1:length(sors_w_no_o_subgraphs)){
-  no.o.subgraphs.NULL.sor[x,] <- read.csv(paste("05_Wombling_Null_Models/04_Null_Beta_Diversity/", bricks[sors_w_no_o_subgraphs][[x]], "/sor_number_of_subgraphs.csv", sep=""))[,2]
+  no.o.subgraphs.NULL.sor[x,] <- read.csv(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", bricks[sors_w_no_o_subgraphs][[x]], "/sor_number_of_subgraphs.csv", sep=""))[,2]
 }
 
 # Read in the emperical superfluidity values
