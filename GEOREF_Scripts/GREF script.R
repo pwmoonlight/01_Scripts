@@ -1,113 +1,112 @@
+# Clear the R workspace
+rm(list = ls(all=T))
 
-###############################################################################################################
-  ###############################################################################################################
-    ###############################################################################################################
-      ######################### Script by Peter Moonlight, Tiina Sarkinen et al. 2017 ###############################
-    ###############################################################################################################
-  ###############################################################################################################
-###############################################################################################################
+setwd("E:/GBIF_analyses___GEOREF")
 
+years <- gsub(".csv", "", list.files("9_date", pattern="*.csv"))
 
+gref_percentages <- read.csv("georef_percentages.csv", header=T, row.names = 1)
 
+dir.create("10_georef_sim")
 
-### Prepare the working space
-### -------------------------
+for(x in years){
+  print(x)
+  
+  if(!file.exists(paste("4A_georeferenced_B_Split_By_Date/", x, ".csv", sep=""))){next}
+  
+  data <- read.csv(file=paste("9_date/", x, ".csv", sep=""))[,-1]
+  grefed_data <- read.csv(file=paste("4A_georeferenced_B_Split_By_Date/", x, ".csv", sep=""))[,-1]
+  
+  no_non_grefed <- length(data[,1])
+  no_grefed <- length(grefed_data[,1])
+  
+  percent_grefed <- no_grefed/(no_non_grefed+no_grefed)
+  percentage_to_gref <- gref_percentages[x,4]
+  
+  if(percentage_to_gref>percent_grefed){
+    percent_todo <- percentage_to_gref-percent_grefed
+    number_todo <- round((no_non_grefed+no_grefed)*percent_todo,0)
 
-setwd("E:/000_Modeling_Working_Directory_000")
-source(paste(getwd(), "/01_Scripts/Minor_Modules/1___Prepare_Working_Space.R", sep=""))
-
-require(raster)
-
-### Read in the nordeste mask
-### -------------------------
-
-nordeste <- raster("000_GIS_LAYERS/nordeste.tif")
-nordeste <- raster("000_GIS_LAYERS/nordeste.grd")
-
-
-### Read in the Models
-### ------------------
-
-species <- gsub(".tif$", "", list.files("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", pattern="*.tif$", full.names=F))
-species.level.dir <- lapply(1:length(species), function(x){raster(paste("03_Modelling/12a_Thresholded_Models_Masked_Nordeste/", as.character(species)[[x]], ".tif", sep=""))})
-SDM.b <- stack(species.level.dir)
-
-
-### Read in the Plot Localities
-### ---------------------------
-
-sites <- read.csv("07_Virtual_Plot_Checklists/sites.csv")[,c(2,4,10,11)]
-sites <- sites[which(!is.na(extract(SDM.b[[1]], SpatialPoints(sites[,c(4:3)])))),]
-
-plot(SpatialPoints(sites[,4:3]), add=T)
-
-### Expand the sites matrix to house the results
-### --------------------------------------------
-sites[,5:(length(species)+4)] <- NA
-colnames(sites)[5:(length(species)+4)] <- species
-
-
-### Populate the results
-### --------------------
-
-
-writeLines(paste("...0%", sep=""))
-for(x in 1:nlayers(SDM.b)){
-  percents <- round(nlayers(SDM.b)*seq(1, 0, -0.01))
-  if(x %in% percents){
-    writeLines(paste("...", round(x/nlayers(SDM.b)*100, 0), "%", sep=""))
+    specimens_todo <- sample(1:no_non_grefed, size=number_todo, replace=F)
+    
+    specimens_todo <- data[specimens_todo,]
+    
+    write.csv(specimens_todo, file=paste("10_georef_sim/", x, ".csv", sep=""))
   }
-  sites[,(x+4)] <- extract(SDM.b[[x]], SpatialPoints(sites[,4:3]))
-}
-
-sites <- t(sites)
-colnames(sites) <- sites[1,]
-sites <- sites[-c(1:4),]
-rownames(sites) <- species
-write.csv(sites, "07_Virtual_Plot_Checklists/site_results.csv")
-
-
-
-
-
-# a) Load all of the required spreadsheets into R
-# Obs: I used the read.csv function in here, but there is a limit to the number of rows and columns that csv files can have. If data is being lost because of this, please load tables as text files
-
-spp <- read.csv("07_Virtual_Plot_Checklists/site_results.csv", sep=",", head=TRUE, row.names=1)
-colnames(spp) <- gsub("\\.", "", colnames(spp))
-colnames(spp) <- gsub("X", "", colnames(spp))
-
-sums <- colSums(spp)
-#spp <- spp[,-which(sums==0)]
-
-
-sites <- read.csv("07_Virtual_Plot_Checklists/sites.csv")[,c(2,4,10,11)]
-sites <- sites[which(!is.na(extract(SDM.b[[1]], SpatialPoints(sites[,c(4:3)])))),]
-
-sppxsites <- as.data.frame(matrix(ncol=2))[-1,]
-colnames(sppxsites) <- c("AreaID", "SppID")
-
-for(x in 1:length(colnames(spp))){
-  index <- which(spp[,x] == 1)
-  
-  temp <- as.data.frame(matrix(ncol=2), nrow=length(index))
-  colnames(temp) <- c("AreaID", "SppID")
-  temp[1:length(index),1] <- colnames(spp)[[x]]
-  temp[,2] <- rownames(spp)[index]
-  
-  sppxsites <- rbind(sppxsites, temp)
 }
 
 
-write.csv(sppxsites, "07_Virtual_Plot_Checklists/sppxsites.csv")
-sites <- read.csv("07_Virtual_Plot_Checklists/sites.csv")[,c(2,4,10,11)]
-sites <- sites[which(!is.na(extract(SDM.b[[1]], SpatialPoints(sites[,c(4:3)])))),]
+dir.create("10a_Split_by_Family")
+years <- gsub(".csv", "", list.files("10_georef_sim", pattern="*.csv"))
 
-#Spp by sites/grid-cells matrix (a correspondance matrix with two columns: sites and species)
-sppxsites <- read.csv("07_Virtual_Plot_Checklists/sppxsites.csv", sep=",", head=TRUE)[,-1]
+for(x in years){
+  print(x)
+  
+  data <- read.csv(file=paste("10_georef_sim/", x, ".csv", sep=""))[,-1]
+  families <- unique(data$fam)
+  
+  for(y in families){
+    new_family_data <- data[which(data$fam==y),]
+    if(file.exists(paste("10a_Split_by_Family/", y, ".csv", sep=""))){
+      family.data <- read.csv(paste("10a_Split_by_Family/", y, ".csv", sep=""))[,-1]
+      new_family_data <- rbind(family.data, new_family_data)
+    }
+    
+    write.csv(new_family_data, file=paste("10a_Split_by_Family/", y, ".csv", sep=""))
+  }
+}
+
+
+
+
+dir.create("10b_Split_by_Region")
+years <- gsub(".csv", "", list.files("10_georef_sim", pattern="*.csv"))
+
+regions <- read.csv("isocodes.csv")
+
+for(x in years){
+  print(x)
+  
+  data <- read.csv(file=paste("10_georef_sim/", x, ".csv", sep=""))[,-1]
+  countries <- unique(data$cc)
+  
+  
+  
+  for(y in countries){
+    new_country_data <- data[which(data$cc==y),]
+    
+    if(dim(new_country_data)[1]==0){next}
+    
+    z <- new_country_data$cc[[1]]
+    z <- which(regions$code == as.character(z))
+    z <- regions$region[[z]]
+    
+    if(file.exists(paste("10b_Split_by_Region/", z, ".csv", sep=""))){
+      region.data <- read.csv(paste("10b_Split_by_Region/", z, ".csv", sep=""))[,-1]
+      new_country_data <- rbind(region.data, new_country_data)
+    }
+    
+    write.csv(new_country_data, file=paste("10b_Split_by_Region/", z, ".csv", sep=""))
+  }
+}
+
+write.csv(sppxsites, file="07_Virtual_Plot_Checklists/sppxsites.csv")
+sppxsites <- read.csv("07_Virtual_Plot_Checklists/sppxsites.csv")[,-1]
+
+
+
+
+
+
+
+
 dim(sppxsites)
 head(sppxsites)
 
+#Checking if there are any mismatches (species and sites that are present in one matrix, but not in the other)
+#Obs: in NeoTropTree, all sites and species have been assigned a number. This number is under the AreaID and SppID columns
+
+sites <- read.csv("07_Virtual_Plot_Checklists/sites.csv", fileEncoding="latin1")
 
 #Checking the sites/grid-cells
 sites_miss <- sites[which(!sites$AreaID %in% sppxsites$AreaID),]
@@ -115,20 +114,18 @@ dim(sites_miss)
 sites_miss
 #Should be none
 
-
 #the opposite
 sites_miss2 <- sppxsites[which(!sppxsites$AreaID %in% sites$AreaID),]
 dim(sites_miss2)
 #should also be none
 
-
 #Now checking species
-spp_miss <- spp[which(!rownames(spp) %in% sppxsites$SppID),]
+spp_miss <- spp[which(!spp$SppID %in% sppxsites$SppID),]
 dim(spp_miss)
 #Should be none
 
 #the opposite
-spp_miss2 <- sppxsites[which(!sppxsites$SppID %in% rownames(spp)),]
+spp_miss2 <- sppxsites[which(!sppxsites$SppID %in% spp$SppID),]
 dim(spp_miss2)
 #should also be none
 
@@ -136,12 +133,12 @@ dim(spp_miss2)
 #In here we'll create a species occurrence matrix (presence X abscence) through a loop function. Depending on the size, this might take a while to run.
 
 #In case you have a difference in number of species included in each one of your matrices, follow the object created bellow instead of using "sppxsites"
-#sppxareas_trim <- sppxareas[which(sppxsites$AreaID %in% sites$AreaID),] #Making sure that only species in both matrices are being included 
-#length(sppxareas_trim$AreaID)
+#sppxsites_trim <- sppxsites[which(sppxsites$AreaID %in% sites$AreaID),] #Making sure that only species in both matrices are being included 
+#length(sppxsites_trim$AreaID)
 
 sites_sub <- unique(sppxsites$AreaID)
 spp_sub <- unique(sppxsites$SppID)
-spp_sub2 <- spp[which(rownames(spp) %in% sppxsites$SppID),]
+spp_sub2 <- spp[which(spp$SppID%in%sppxsites$SppID),]
 
 spp_commat <- matrix(0,length(sites_sub),length(spp_sub))
 for (i in 1:nrow(spp_commat)){
@@ -150,10 +147,14 @@ for (i in 1:nrow(spp_commat)){
   print(i)
 }
 
-rownames(spp_commat) <- as.character(sites$AreaCode[match(sites_sub,sites$AreaID)])
-colnames(spp_commat) <- as.character(rownames(spp)[match(spp_sub,rownames(spp))])
+rownames(spp_commat) <- as.character(sites$AreaCode[match(sites_sub,areas$AreaID)])
+colnames(spp_commat) <- as.character(spp$Species.code[match(spp_sub,spp$SppID)])
 dim(spp_commat)
-spp_commat[1:10,1:10]
+spp_commat[1:6,1:6]
+
+sums <- rowSums(spp_commat)
+sums <- which(sums == 0)
+spp_commat <- spp_commat[-sums,]
 
 # c) Building the first clusters and identifying the rogue sites/grid-cells by suing the roguenarok approach (external to R)
 #The clusters are built based on a pairwise distance matrix. There is a plethora of metrics that can be used to construct such matrix and the method needs to be chosen according to
@@ -166,10 +167,10 @@ library(recluster)
 cluster1 <- recluster.cons(spp_commat, tr=100, p=0.5) #100 clusters should be enough, but feel free to make more clusters if necessary
 #Extracting the consensus tree
 constree1 <- cluster1$cons
-write.tree(constree1,"07_Virtual_Plot_Checklists/100trees_cons.tre")
 plot(constree1) # This is gonna look ugly in R, especially if working with a lot of data. However, it's a good way of checking for the cluster's overall topology
 #We'll need all of the clusters used to create the consensus tree. The following lines are a loop function to save all of the clusters created into a list that can be read by other softwares
 write.tree(cluster1$trees[[1]],"07_Virtual_Plot_Checklists/100trees.tre")
+write.tree(cluster1$cons,"07_Virtual_Plot_Checklists/100trees_cons.tre")
 for (i in 2:length(cluster1$trees)){
   write.tree(cluster1$trees[[i]],"07_Virtual_Plot_Checklists/100trees.tre",append=T)
 }
@@ -187,7 +188,8 @@ for (i in 2:length(cluster1$trees)){
 
 #Reading the table listing the rogue sites that will be removed from the dataset.
 outliers = read.table("07_Virtual_Plot_Checklists/rogue_taxa_ntt10.txt", header = F, sep = "")
-spp_commat_norogue= spp_commat[-which(rownames(spp_commat)%in%as.character(outliers[,3])),]
+rownames(spp_commat) <- 1:length(spp_commat[,1])
+spp_commat_norogue= spp_commat[-which(rownames(spp_commat)%in%outliers[,1]),]
 dim(spp_commat_norogue)
 
 #Removing spp with no occurrences
@@ -196,7 +198,7 @@ dim(spp_commat_norogue_trim)
 
 #Always important to see if there is a pattern behind the removed sites/grid-cells. Firstly, it is important to look at
 #species richness numbers in order to see if these sites are species poor.
-spp_commat_rogue <- spp_commat[which(rownames(spp_commat)%in%outliers[,3]),]
+spp_commat_rogue <- spp_commat[which(rownames(spp_commat)%in%outliers[,1]),]
 dim(spp_commat_rogue)
 spp_commat_rogue <- spp_commat_rogue[,which(colSums(spp_commat_rogue) > 0)]
 dim(spp_commat_rogue)
@@ -206,7 +208,9 @@ sort(spp_rich_rogue)
 #It is also a good idea to see where these sites are falling in the map.
 rogue_sites <- subset(sites, sites$AreaCode %in% rownames(spp_commat_rogue))
 dim(rogue_sites)
-plot(SDM.b[[1]])
+library(maps)
+map(xlim=c(-83,-32),ylim=c(-35,6))
+map.axes()
 points(rogue_sites$Long10,rogue_sites$Lat10)
 
 #By removing sites, some species will automaticly no longer have any occurrence on the dataset and therefore needs to be removed.
@@ -255,73 +259,52 @@ constree_norogue_nopoly <- di2multi(constree_norogue)
 
 sort(constree_norogue_nopoly$tip.label) #Just to make sure everything is ok with the labels.
 
-#Atlantic forest 1
-atlantic_node <- findMRCA(constree_norogue_nopoly, c("AtlBA080","AtlBA058")) #Find the MRCA of a given group
-atlantic_tips <- getDescendants(constree_norogue_nopoly,atlantic_node) # Get the identity of all nodes and tips stemming from the above MRCA
-atlantic_tips <- na.omit(constree_norogue_nopoly$tip.label[atlantic_tips]) # Remove the nodes and keeps the tips
+#Atlantic forest
+atlantic_node <- findMRCA(constree_lowtrop_norogue_trim, c("AtlSP182","AtlPE001")) #Find the MRCA of a given group
+atlantic_tips <- getDescendants(constree_lowtrop_norogue_trim,atlantic_node) # Get the identity of all nodes and tips stemming from the above MRCA
+atlantic_tips <- na.omit(constree_lowtrop_norogue_trim$tip.label[atlantic_tips]) # Remove the nodes and keeps the tips
 length(atlantic_tips) # Important to check the lengh of each one of the groups.
 
-#Atlantic forest 2
-atlantic_node_2 <- findMRCA(constree_norogue_nopoly, c("AtlSE003","AtlAL020")) #Find the MRCA of a given group
-atlantic_tips_2 <- getDescendants(constree_norogue_nopoly,atlantic_node_2) # Get the identity of all nodes and tips stemming from the above MRCA
-atlantic_tips_2 <- na.omit(constree_norogue_nopoly$tip.label[atlantic_tips_2]) # Remove the nodes and keeps the tips
-length(atlantic_tips_2) # Important to check the lengh of each one of the groups.
+#sdtf
+sdtf_node <- findMRCA(constree_lowtrop_norogue_trim, c("CaaPB029","CerMS061"))
+sdtf_tips <- getDescendants(constree_lowtrop_norogue_trim, sdtf_node)
+sdtf_tips <- na.omit(constree_lowtrop_norogue_trim$tip.label[sdtf_tips])
+length(sdtf_tips)
 
-#Atlantic forest 3
-atlantic_node_3 <- findMRCA(constree_norogue_nopoly, c("CerMG015","AtlMG049")) #Find the MRCA of a given group
-atlantic_tips_3 <- getDescendants(constree_norogue_nopoly,atlantic_node_3) # Get the identity of all nodes and tips stemming from the above MRCA
-atlantic_tips_3 <- na.omit(constree_norogue_nopoly$tip.label[atlantic_tips_3]) # Remove the nodes and keeps the tips
-length(atlantic_tips_3) # Important to check the lengh of each one of the groups.
-
-#amazon 1
-amazon_tips <- "AmzMA008"
+#amazon
+amazon_node <- findMRCA(constree_lowtrop_norogue_trim, c("AmzPA158","AmzAM304"))
+amazon_tips <- getDescendants(constree_lowtrop_norogue_trim, amazon_node)
+amazon_tips <- na.omit(constree_lowtrop_norogue_trim$tip.label[amazon_tips])
 length(amazon_tips)
 
-#mix
-mix_node <- findMRCA(constree_norogue_nopoly, c("AtlMA004","CerPI026"))
-mix_tips <- getDescendants(constree_norogue_nopoly, mix_node)
-mix_tips <- na.omit(constree_norogue_nopoly$tip.label[mix_tips])
-length(mix_tips)
-
-#mix 2
-mix_node_2 <- findMRCA(constree_norogue_nopoly, c("AtlBA094","CerMG039"))
-mix_tips_2 <- getDescendants(constree_norogue_nopoly, mix_node_2)
-mix_tips_2 <- na.omit(constree_norogue_nopoly$tip.label[mix_tips_2])
-length(mix_tips_2)
-
-#caatinga
-caatinga_node <- findMRCA(constree_norogue_nopoly, c("AtlCE030","CaaCE034"))
-caatinga_tips <- getDescendants(constree_norogue_nopoly, caatinga_node)
-caatinga_tips <- na.omit(constree_norogue_nopoly$tip.label[caatinga_tips])
-length(caatinga_tips)
+#chaco
+chaco_node <- findMRCA(constree_lowtrop_norogue_trim, c("ChaAR026","ChaAR054"))
+chaco_tips <- getDescendants(constree_lowtrop_norogue_trim, chaco_node)
+chaco_tips <- na.omit(constree_lowtrop_norogue_trim$tip.label[chaco_tips])
+length(chaco_tips)
 
 #cerrado
-cerrado_node <- findMRCA(constree_norogue_nopoly, c("CerMG152","CerPI049"))
-cerrado_tips <- getDescendants(constree_norogue_nopoly, cerrado_node)
-cerrado_tips <- na.omit(constree_norogue_nopoly$tip.label[cerrado_tips])
+cerrado_node <- findMRCA(constree_lowtrop_norogue_trim, c("CerMG239","AmzRO056"))
+cerrado_tips <- getDescendants(constree_lowtrop_norogue_trim, cerrado_node)
+cerrado_tips <- na.omit(constree_lowtrop_norogue_trim$tip.label[cerrado_tips])
 length(cerrado_tips)
 
 #Remember to sum all of the lenghts obtained here. The sum must be equal to the total number of tips. Pay special attential to groups with big politomies. 
-length(constree_norogue_nopoly$tip.label)
-length(amazon_tips) + length(caatinga_tips) + length(mix_tips_2) + length(mix_tips) + length(atlantic_tips_3) + length(atlantic_tips_2) + length(atlantic_tips) + length(cerrado_tips)
 
 #Preparing the cluster_membership vector
 #all_tips
-all_tips <- c(amazon_tips, caatinga_tips, mix_tips_2, mix_tips, atlantic_tips_3, atlantic_tips_2, atlantic_tips, cerrado_tips)
+all_tips <- c(atlantic_tips, chaco_tips, amazon_tips, sdtf_tips, cerrado_tips)
 cluster_membership <- vector("character",length(all_tips))
-cluster_membership[which(all_tips%in% amazon_tips)] <- "AMZ"
-cluster_membership[which(all_tips%in% caatinga_tips)] <- "CAA"
-cluster_membership[which(all_tips%in% mix_tips_2)] <- "MIX_2"
-cluster_membership[which(all_tips%in% mix_tips)] <- "MIX_1"
-cluster_membership[which(all_tips%in% atlantic_tips_3)] <- "ATL_3"
-cluster_membership[which(all_tips%in% atlantic_tips_2)] <- "ATL_2"
-cluster_membership[which(all_tips%in% atlantic_tips)] <- "ATL_1"
-cluster_membership[which(all_tips%in% cerrado_tips)] <- "CER"
+cluster_membership[which(all_tips%in% atlantic_tips)] <- "Atlantic Forest"
+cluster_membership[which(all_tips%in% chaco_tips)] <- "Chaco"
+cluster_membership[which(all_tips%in% amazon_tips)] <- "Amazon Forest"
+cluster_membership[which(all_tips%in% sdtf_tips)] <- "SDTF"
+cluster_membership[which(all_tips%in% cerrado_tips)] <- "Cerrado"
 length(cluster_membership)
 class(cluster_membership)
 
 #The cluster_membership vector needs to be added to the sites matrix after removing the rogue sites.
-sites_norogue <- sites[-which(sites$AreaCode%in%outliers[,3]),]
+sites_norogue <- sites[-which(sites$AreaCode%in%outliers[,1]),]
 
 #Matching the cluster_membership vector with the sites
 cluster_membership <- cluster_membership[match(sites_norogue$AreaCode,all_tips)] # The two objects need to be matched up first so they'll be bound correctly to each other
@@ -342,41 +325,28 @@ install.packages("maptools")
 library(maptools)
 
 
-nordeste <- raster("000_GIS_LAYERS/nordeste.tif")
-plot(nordeste)
+map(xlim=c(-83,-25),ylim=c(-35,6))
 map.axes()
-#Amazon group
-points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "AMZ")]
-       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "AMZ")],pch=24,col=rgb
+#Atlantic group
+points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "Atlantic Forest")]
+       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "Atlantic Forest")],pch=24,col=rgb
        (t(col2rgb("chartreuse4"))/255,alpha=1), bg=rgb(t(col2rgb("chartreuse4"))/255))
 #Cerrado group
-points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "CER")]
-       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "CER")],pch="O",col=rgb
+points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "Cerrado")]
+       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "Cerrado")],pch="O",col=rgb
        (t(col2rgb("gray53"))/255,alpha=1), bg=rgb(t(col2rgb("gray53"))/255, alpha=1))
-#Mix Group 1
-points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "MIX_1")]
-       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "MIX_1")],pch=15,col=rgb
+#Amazon group
+points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "Amazon Forest")]
+       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "Amazon Forest")],pch=15,col=rgb
        (t(col2rgb("blue"))/255,alpha=1), bg=rgb(t(col2rgb("blue"))/255, alpha=1))
-#Mix Group 1
-points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "MIX_2")]
-       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "MIX_2")],pch=15,col=rgb
-       (t(col2rgb("turquoise"))/255,alpha=1), bg=rgb(t(col2rgb("turquoise"))/255, alpha=1))
-#Atlantic Group 3
-points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "ATL_3")]
-       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "ATL_3")],pch=19,col=rgb
+#SDTF group
+points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "SDTF")]
+       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "SDTF")],pch=19,col=rgb
        (t(col2rgb("saddlebrown"))/255,alpha=1), bg=rgb(t(col2rgb("saddlebrown"))/255))
-#Atlantic Group 2
-points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "ATL_2")]
-       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "ATL_2")],pch=19,col=rgb
-       (t(col2rgb("red"))/255,alpha=1), bg=rgb(t(col2rgb("red"))/255))
-#Atlantic Group 1
-points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "ATL_1")]
-       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "ATL_1")],pch=19,col=rgb
-       (t(col2rgb("tomato"))/255,alpha=1), bg=rgb(t(col2rgb("tomato"))/255))
-#Caatinga group
-points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "CAA")]
-       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "CAA")],pch=25,col=rgb
-       (t(col2rgb("purple"))/255,alpha=1), bg=rgb(t(col2rgb("purple"))/255, alpha=1))
+#Chaco group
+points(sites_norogue_membership$Long10[which(sites_norogue_membership$cluster_membership == "Chaco")]
+       ,sites_norogue_membership$Lat10[which(sites_norogue_membership$cluster_membership == "Chaco")],pch=25,col=rgb
+       (t(col2rgb("black"))/255,alpha=1), bg=rgb(t(col2rgb("black"))/255, alpha=1))
 
 # h) Performing a silhouette analysis in the cluster in order to identify sites/grid-cells that are floristically closer to another group/biome
 
@@ -410,46 +380,37 @@ misclass_sites_full <- subset(sites_norogue_membership, sites_norogue_membership
 dim(misclass_sites_full)
 colnames(misclass_sites_full)
 misclass_sites_full$AreaCode
-write.csv(misclass_sites_full, "07_Virtual_Plot_Checklists/misclass_sites_full.csv")
+write.csv(misclass_sites_full, "misclass_sites_full.csv")
 
 # j) Mapping the sites/grid-cells identified by the silhouette analysis
 
-plot(nordeste)
+map(xlim=c(-83,-25),ylim=c(-35,6))
 map.axes()
 #Atlantic group
-points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "AMZ")]
-       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "AMZ")],pch=24,col=rgb
+points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "Atlantic Forest")]
+       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "Atlantic Forest")],pch=24,col=rgb
        (t(col2rgb("chartreuse4"))/255,alpha=1), bg=rgb(t(col2rgb("chartreuse4"))/255))
 #Cerrado group
-points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "CER")]
-       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "CER")],pch="O",col=rgb
+points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "Cerrado")]
+       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "Cerrado")],pch="O",col=rgb
        (t(col2rgb("gray53"))/255,alpha=1), bg=rgb(t(col2rgb("gray53"))/255, alpha=1))
-#Mix 1 group
-points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "MIX_1")]
-       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "MIX_1")],pch=15,col=rgb
+#Amazon group
+points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "Amazon Forest")]
+       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "Amazon Forest")],pch=15,col=rgb
        (t(col2rgb("blue"))/255,alpha=1), bg=rgb(t(col2rgb("blue"))/255, alpha=1))
-#Mix 2 group
-points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "MIX_2")]
-       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "MIX_2")],pch=15,col=rgb
-       (t(col2rgb("turquoise"))/255,alpha=1), bg=rgb(t(col2rgb("turquoise"))/255, alpha=1))
-#Atl 3 group
-points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "ATL_3")]
-       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "ATL_3")],pch=19,col=rgb
-       (t(col2rgb("red"))/255,alpha=1), bg=rgb(t(col2rgb("red"))/255))
-#Atl 2 group
-points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "ATL_2")]
-       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "ATL_2")],pch=19,col=rgb
-       (t(col2rgb("purple"))/255,alpha=1), bg=rgb(t(col2rgb("purple"))/255))
-#Atl 1 group
-points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "ATL_1")]
-       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "ATL_1")],pch=19,col=rgb
+#SDTF group
+points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "SDTF")]
+       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "SDTF")],pch=19,col=rgb
        (t(col2rgb("saddlebrown"))/255,alpha=1), bg=rgb(t(col2rgb("saddlebrown"))/255))
-#Caatinga group
-points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "CAA")]
-       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "CAA")],pch=25,col=rgb
-       (t(col2rgb("purple"))/255,alpha=1), bg=rgb(t(col2rgb("purple"))/255, alpha=1))
+#Chaco group
+points(misclass_sites_full$Long10[which(misclass_sites_full$cluster_membership == "Chaco")]
+       ,misclass_sites_full$Lat10[which(misclass_sites_full$cluster_membership == "Chaco")],pch=25,col=rgb
+       (t(col2rgb("black"))/255,alpha=1), bg=rgb(t(col2rgb("black"))/255, alpha=1))
 
 ######
 #More details on the information presented in here can be found at: https://ourcodingclub.github.io/2017/03/21/data-clustering.html
+
+
+
 
 

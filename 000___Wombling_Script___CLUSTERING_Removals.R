@@ -83,7 +83,7 @@ dir.create("06_Clustering/Dendrograms", showWarnings = F)
 # regions are rows and species columns, 0 = absence and 1 = presence.
 ####################################################################################################################################
 
-pick.num.subgraphs <- 18318
+pick.num.subgraphs <- 2691
 pick.index <- "SIM"
  
 sp.comp <- read.table(paste("04_Wombling/SpeciesRegions_", pick.index, "_", pick.num.subgraphs,".txt", sep=""), header=T, sep=",", row.names=1)

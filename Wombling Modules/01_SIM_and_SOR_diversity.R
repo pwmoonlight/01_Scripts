@@ -11,7 +11,7 @@
 # species are unique to one of the grid cells, represented as "0",
 # species unique to the other grid cell, represented as "Inf",
 # and shared species, represented as a "1".
-obs.beta.terms <-  SDM.b[cell.adj[,1]][,brick.index.species.in.phylogeny] / SDM.b[cell.adj[,2]][,brick.index.species.in.phylogeny]
+obs.beta.terms <-  null.SDM.b[cell.adj[,1]][,brick.index.species.in.phylogeny] / null.SDM.b[cell.adj[,2]][,brick.index.species.in.phylogeny]
 
 # Next, for all pairs of adjacent grid cells, calculate the following terms, see page 254 in
 # Legendre and Legendre (2010, Numerical Ecology, Second Edition):

@@ -49,7 +49,7 @@ rasterOptions(datatype="LOG1S") #specify datatype (true/false or presence/absenc
 
 # Create Folders in which to store the results
 dir.create("05_Wombling_Null_Models/03_Null_Beta_Diversity", showWarnings = F)
-lapply(bricks, function(x){dir.create(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", x, sep=""), showWarnings = F)})
+#lapply(bricks, function(x){dir.create(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", x, sep=""), showWarnings = F)})
 
 ############################################################################################################################
 # 4) Read and examine the phylogeny for the species in the analysis (the "Nordeste phylogeny")
@@ -73,7 +73,7 @@ lapply(bricks, function(x){dir.create(paste("05_Wombling_Null_Models/03_Null_Bet
 species.in.analysis <- read.csv(file="04_Wombling/species_in_analysis.txt", sep=",", header=F)[,1]
 brick.index.species.in.phylogeny <- gsub("-", ".", gsub(" ", "_", as.character(species.in.analysis)))
 
-bricks <- list.dirs("05_Wombling_Null_Models/02b_Null_Distributions", full.names=F, recursive=F)
+bricks <- list.dirs("05_Wombling_Null_Models/02_Null_Distributions", full.names=F, recursive=F)
 
 for(brick in bricks){
  if(!dir.exists(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, sep=""))){
@@ -82,16 +82,16 @@ for(brick in bricks){
    writeLines(paste("\nWorking on brick ", brick, " of ", length(bricks), sep=""))
 
    writeLines(paste("...Creating Brick", sep=""))
-   SDM.b <- lapply(1:length(species.in.analysis), function(x){raster(paste("05_Wombling_Null_Models/02b_Null_Distributions/", brick, "/", brick.index.species.in.phylogeny[[x]], "_NULL.gri", sep=""))})+
-   SDM.raster.names <- vector(mode = "list", length = length(SDM.b))
-   for(i in 1:length(SDM.b[]))
+   null.SDM.b <- lapply(1:length(species.in.analysis), function(x){raster(paste("05_Wombling_Null_Models/02_Null_Distributions/", brick, "/", brick.index.species.in.phylogeny[[x]], "_NULL.gri", sep=""))})
+   SDM.raster.names <- vector(mode = "list", length = length(null.SDM.b))
+   for(i in 1:length(null.SDM.b[]))
    {
-     SDM.b[[i]]@data@names  <- brick.index.species.in.phylogeny[[i]]
+     null.SDM.b[[i]]@data@names  <- brick.index.species.in.phylogeny[[i]]
    }
    for(x in SDM.raster.names){eval(x)}
 
    writeLines(paste("...Stacking Brick", sep=""))
-   SDM.b <- stack(SDM.b)
+   null.SDM.b <- stack(null.SDM.b)
 
    writeLines("...Calculating beta diversity")
    source(paste(getwd(), "/01_Scripts/Wombling Modules/01_SIM_and_SOR_diversity.R", sep=""))
@@ -109,7 +109,7 @@ for(brick in bricks){
    source(paste(getwd(), "/01_Scripts/Wombling Modules/02_rank_SIM_and_SOR_diversity.R", sep=""))
  }
 }
-  
+ 
 ############################################################################################################################
 # 9) Map beta-diversity values for the spatial links created in section 2 (above).
 # You may choose an "animated" loop (section 7.1 below) that displays increasingly lower values of beta-diversity,
@@ -132,25 +132,27 @@ for(brick in bricks){
 #
 
 bricks <- list.dirs("05_Wombling_Null_Models/03_Null_Beta_Diversity", full.names=F, recursive=F)
+bricks <- rev(bricks)
 
 for(brick in bricks){
   if(!dir.exists(paste("05_Wombling_Null_Models/04_Null_Number_of_Subgraphs/", brick, sep=""))){
     dir.create(paste("05_Wombling_Null_Models/04_Null_Number_of_Subgraphs/", brick, sep=""))
     
     writeLines(paste("\nWorking on brick ", brick, " of ", length(bricks), sep=""))
-    writeLines(paste("...Creating Brick", sep=""))
-    SDM.b <- lapply(1:length(species.in.analysis), function(x){raster(paste("05_Wombling_Null_Models/02b_Null_Distributions/", brick, "/", brick.index.species.in.phylogeny[[x]], "_NULL.gri", sep=""))})
-    SDM.raster.names <- vector(mode = "list", length = length(SDM.b))
 
-    for(i in 1:length(SDM.b[]))
+    writeLines(paste("...Creating Brick", sep=""))
+    null.SDM.b <- lapply(1:length(species.in.analysis), function(x){raster(paste("05_Wombling_Null_Models/02_Null_Distributions/", brick, "/", brick.index.species.in.phylogeny[[x]], "_NULL.gri", sep=""))})
+    SDM.raster.names <- vector(mode = "list", length = length(null.SDM.b))
+    for(i in 1:length(null.SDM.b[]))
     {
-      SDM.raster.names[[i]]  <- SDM.b[[i]]@file@name
+      null.SDM.b[[i]]@data@names  <- brick.index.species.in.phylogeny[[i]]
     }
     for(x in SDM.raster.names){eval(x)}
-
+    
     writeLines(paste("...Stacking Brick", sep=""))
-    SDM.b <- stack(SDM.b)
-
+    null.SDM.b <- stack(null.SDM.b)
+    
+    
     #read in the beta diversity measures
     obs.beta.sim <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sim.csv", sep=""), sep=",", header=T)[,2]
     obs.beta.sor <- read.table(paste("05_Wombling_Null_Models/03_Null_Beta_Diversity/", brick, "/sor.csv", sep=""), sep=",", header=T)[,2]
@@ -171,7 +173,8 @@ for(brick in bricks){
     number.of.subgraphs.sor <- rep(NA, times=length(obs.beta.sor))
 
     start.time <- Sys.time()
-
+    
+    writeLines(paste("...0% at ", Sys.time(), sep=""))
     for(i in 1:length(obs.beta.sim))
     {
       percents <- round(length(obs.beta.sim)*seq(1, 0, -0.05))

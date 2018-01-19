@@ -1,10 +1,10 @@
 
 ###############################################################################################################
-  ###############################################################################################################
-    ###############################################################################################################
-      ######################### Script by Peter Moonlight, Tiina Sarkinen et al. 2017 ###############################
-    ###############################################################################################################
-  ###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+######################### Script by Peter Moonlight, Tiina Sarkinen et al. 2017 ###############################
+###############################################################################################################
+###############################################################################################################
 ###############################################################################################################
 
 
@@ -33,18 +33,20 @@ species.level.dir <- lapply(1:length(species), function(x){raster(paste("03_Mode
 SDM.b <- stack(species.level.dir)
 
 
-### Read in the Plot Localities
-### ---------------------------
+### Determine the site localities
+### -----------------------------
 
-sites <- read.csv("07_Virtual_Plot_Checklists/sites.csv")[,c(2,4,10,11)]
-sites <- sites[which(!is.na(extract(SDM.b[[1]], SpatialPoints(sites[,c(4:3)])))),]
+sites <- which(!is.na(SDM.b[[1]][1:length(SDM.b[[1]])]))
+sites <- as.data.frame(xyFromCell(SDM.b, sites))
+rownames(sites) <- which(!is.na(SDM.b[[1]][1:length(SDM.b[[1]])]))
 
-plot(SpatialPoints(sites[,4:3]), add=T)
+plot(nordeste)
+plot(SpatialPoints(sites[,1:2]), add=T)
 
 ### Expand the sites matrix to house the results
 ### --------------------------------------------
-sites[,5:(length(species)+4)] <- NA
-colnames(sites)[5:(length(species)+4)] <- species
+sites[,3:(length(species)+2)] <- NA
+colnames(sites)[3:(length(species)+2)] <- species
 
 
 ### Populate the results
@@ -55,16 +57,17 @@ writeLines(paste("...0%", sep=""))
 for(x in 1:nlayers(SDM.b)){
   percents <- round(nlayers(SDM.b)*seq(1, 0, -0.01))
   if(x %in% percents){
-    writeLines(paste("...", round(x/nlayers(SDM.b)*100, 0), "%", sep=""))
+    writeLines(paste("...", round(x/nlayers(SDM.b)*100, 0), "% at ", Sys.time(), sep=""))
   }
-  sites[,(x+4)] <- extract(SDM.b[[x]], SpatialPoints(sites[,4:3]))
+  sites[,(x+2)] <- extract(SDM.b[[x]], SpatialPoints(sites[,1:2]))
 }
 
+site_locs <- sites[,1:2]
+sites <- sites[,-c(1:2)]
 sites <- t(sites)
-colnames(sites) <- sites[1,]
-sites <- sites[-c(1:4),]
-rownames(sites) <- species
-write.csv(sites, "07_Virtual_Plot_Checklists/site_results.csv")
+
+
+write.csv(sites, "07_Virtual_Plot_Checklists/cell_results.csv")
 
 
 
@@ -73,25 +76,22 @@ write.csv(sites, "07_Virtual_Plot_Checklists/site_results.csv")
 # a) Load all of the required spreadsheets into R
 # Obs: I used the read.csv function in here, but there is a limit to the number of rows and columns that csv files can have. If data is being lost because of this, please load tables as text files
 
-spp <- read.csv("07_Virtual_Plot_Checklists/site_results.csv", sep=",", head=TRUE, row.names=1)
-colnames(spp) <- gsub("\\.", "", colnames(spp))
+spp <- read.csv("07_Virtual_Plot_Checklists/cell_results.csv", sep=",", head=TRUE, row.names=1)
+#colnames(spp) <- gsub("\\.", "", colnames(spp))
 colnames(spp) <- gsub("X", "", colnames(spp))
 
 sums <- colSums(spp)
 #spp <- spp[,-which(sums==0)]
 
 
-sites <- read.csv("07_Virtual_Plot_Checklists/sites.csv")[,c(2,4,10,11)]
-sites <- sites[which(!is.na(extract(SDM.b[[1]], SpatialPoints(sites[,c(4:3)])))),]
-
 sppxsites <- as.data.frame(matrix(ncol=2))[-1,]
-colnames(sppxsites) <- c("AreaID", "SppID")
+colnames(sppxsites) <- c("CellID", "SppID")
 
 for(x in 1:length(colnames(spp))){
   index <- which(spp[,x] == 1)
   
   temp <- as.data.frame(matrix(ncol=2), nrow=length(index))
-  colnames(temp) <- c("AreaID", "SppID")
+  colnames(temp) <- c("CellID", "SppID")
   temp[1:length(index),1] <- colnames(spp)[[x]]
   temp[,2] <- rownames(spp)[index]
   
@@ -99,9 +99,7 @@ for(x in 1:length(colnames(spp))){
 }
 
 
-write.csv(sppxsites, "07_Virtual_Plot_Checklists/sppxsites.csv")
-sites <- read.csv("07_Virtual_Plot_Checklists/sites.csv")[,c(2,4,10,11)]
-sites <- sites[which(!is.na(extract(SDM.b[[1]], SpatialPoints(sites[,c(4:3)])))),]
+write.csv(sppxsites, "07_Virtual_Plot_Checklists/sppxcells.csv")
 
 #Spp by sites/grid-cells matrix (a correspondance matrix with two columns: sites and species)
 sppxsites <- read.csv("07_Virtual_Plot_Checklists/sppxsites.csv", sep=",", head=TRUE)[,-1]
